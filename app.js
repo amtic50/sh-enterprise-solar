@@ -72,6 +72,12 @@ var DEFAULT_SETTINGS = {
   tiers: { '1': 'Free panel cleaning', '2': '₹500 gift', '3': '₹1,500 gift' }
 };
 
+/* Message templates version. Bump this when DEFAULT_TEMPLATES is rewritten:
+   loadMeta replaces stored templates older than this version, because a
+   stored meta doc otherwise overrides the new defaults with the old wording.
+   A vendor's own edits are kept only when the stored version is current. */
+var TEMPLATES_VERSION = 2;
+
 var DEFAULT_TEMPLATES = {
   puja: {
     en: "🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! This Puja, share the sunshine: PM Surya Ghar subsidy up to ₹78,000 on rooftop solar, plus a gift for you for every friend you bring! 🎁 Know someone who wants solar? Send them to us — your gift is waiting! ✨ — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
@@ -145,7 +151,8 @@ function demoCustomers() {
 function defaultMeta() {
   return {
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
-    templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES))
+    templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
+    templatesVersion: TEMPLATES_VERSION
   };
 }
 
@@ -529,7 +536,26 @@ var SampleDB = {
     store.save(SAMPLE_LS_KEY, list);
     return Promise.resolve({ added: added, updated: updated });
   },
-  loadMeta: function () { return Promise.resolve(store.load(LS_KEY) || defaultMeta()); },
+  loadMeta: function () {
+    var stored = store.load(LS_KEY);
+    if (!stored) return Promise.resolve(defaultMeta());
+    var storedVersion = stored.templatesVersion || 0;
+    if (storedVersion < TEMPLATES_VERSION) {
+      /* Templates were rewritten in v2 (emoji, new wording). Stored old
+         templates would override the new defaults — replace them and
+         save the upgrade back so the next load already has v2. */
+      var upgraded = {
+        settings: Object.assign({}, DEFAULT_SETTINGS, stored.settings || {}),
+        templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
+        templatesVersion: TEMPLATES_VERSION
+      };
+      store.save(LS_KEY, upgraded);
+      return Promise.resolve(upgraded);
+    }
+    stored.settings = Object.assign({}, DEFAULT_SETTINGS, stored.settings || {});
+    stored.templates = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), stored.templates || {});
+    return Promise.resolve(stored);
+  },
   saveMeta: function (m) { store.save(LS_KEY, m); return Promise.resolve(); }
 };
 
@@ -617,11 +643,30 @@ var FirestoreDB = {
     return db.collection('meta').doc('settings').get().then(function (doc) {
       if (!doc.exists) return defaultMeta();
       var d = doc.data();
-      return { settings: Object.assign({}, DEFAULT_SETTINGS, d.settings || {}), templates: Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), d.templates || {}) };
+      var settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
+      var storedVersion = d.templatesVersion || 0;
+      if (storedVersion < TEMPLATES_VERSION) {
+        /* Templates were rewritten in v2 (emoji, new wording). The stored
+           doc still holds the old wording, and it overrides the new
+           defaults — replace it and save the upgrade back so the next
+           login already has v2. No human has edited templates yet, so
+           nothing deliberate is lost. */
+        var upgraded = {
+          settings: settings,
+          templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
+          templatesVersion: TEMPLATES_VERSION
+        };
+        return db.collection('meta').doc('settings').set(upgraded, { merge: true }).then(function () { return upgraded; });
+      }
+      return {
+        settings: settings,
+        templates: Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), d.templates || {}),
+        templatesVersion: storedVersion
+      };
     });
   },
   saveMeta: function (m) {
-    return db.collection('meta').doc('settings').set({ settings: m.settings, templates: m.templates }, { merge: true });
+    return db.collection('meta').doc('settings').set({ settings: m.settings, templates: m.templates, templatesVersion: m.templatesVersion || TEMPLATES_VERSION }, { merge: true });
   }
 };
 
@@ -1170,8 +1215,17 @@ if (typeof document !== 'undefined') {
           '<label>' + TEMPLATE_NAMES[k] + ' — Assamese</label><textarea id="t-' + k + '-as">' + esc(t[k].as) + '</textarea>';
       }).join('') + '</div>' +
       '<div class="btnrow"><button onclick="saveSettings()">Save settings</button>' +
+      '<button class="secondary" onclick="resetTemplates()">Reset messages to the latest version</button>' +
       '<button class="secondary" onclick="if(confirm(\'Reset the sample preview to the 8 demo customers?\')){store.save(SAMPLE_LS_KEY, demoCustomers());route();}">Reset sample data</button></div>';
   }
+  /* Restore the current built-in message templates (the latest version).
+     Use after a template rewrite, or if the vendor's edits go wrong. */
+  window.resetTemplates = function () {
+    if (!confirm('Reset all message templates to the latest version? Any edits you made to the messages will be replaced.')) return;
+    meta.templates = JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
+    meta.templatesVersion = TEMPLATES_VERSION;
+    activeDB.saveMeta(meta).then(function () { saveMeta(); renderSettings(); alert('Messages reset to the latest version.'); });
+  };
   window.saveSettings = function () {
     meta.settings.businessName = document.getElementById('s-name').value.trim();
     meta.settings.businessShort = document.getElementById('s-short').value.trim();
