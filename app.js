@@ -66,54 +66,104 @@ var DEFAULT_SETTINGS = {
   address: 'Kalpanagar, near Kalpana Cinema Hall, Goalpara, Assam',
   phone: '',
   gstPct: 13.8,
-  offerTitle: '🎉 BUMPER OFFER ☀️',
-  offerText: 'PM Surya Ghar subsidy up to ₹78,000 on rooftop solar — plus gifts for every friend you refer! 🎁',
+  offerTitle: '🎉 BUMPER OFFER 🎁',
+  offerText: 'Refer a friend and earn gifts! Plus PM Surya Ghar subsidy up to ₹78,000 on rooftop solar.',
   offerValidTill: '',
+  posterUrl: 'https://amtic50.github.io/sh-enterprise-solar/offer-poster.jpg',
+  geminiApiKey: '',
+  geminiModel: 'gemini-2.0-flash',
   tiers: { '1': 'Free panel cleaning', '2': '₹500 gift', '3': '₹1,500 gift' }
 };
+
+/* The offer the v2 defaults led with (subsidy first). The v3 upgrade
+   replaces stored settings that still equal these with the new
+   referral-first wording; a vendor's own edits are left alone. */
+var OLD_OFFER_TITLE = '🎉 BUMPER OFFER ☀️';
+var OLD_OFFER_TEXT = 'PM Surya Ghar subsidy up to ₹78,000 on rooftop solar — plus gifts for every friend you refer! 🎁';
 
 /* Message templates version. Bump this when DEFAULT_TEMPLATES is rewritten:
    loadMeta replaces stored templates older than this version, because a
    stored meta doc otherwise overrides the new defaults with the old wording.
    A vendor's own edits are kept only when the stored version is current. */
-var TEMPLATES_VERSION = 2;
+var TEMPLATES_VERSION = 3;
 
 var DEFAULT_TEMPLATES = {
   puja: {
-    en: "🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! This Puja, share the sunshine: PM Surya Ghar subsidy up to ₹78,000 on rooftop solar, plus a gift for you for every friend you bring! 🎁 Know someone who wants solar? Send them to us — your gift is waiting! ✨ — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
-    as: "🙏 নমস্কাৰ {name}! ☀️ আপুনি আমাৰ পৰা ছোলাৰ লগোৱা {months} হ'ল — আপোনাৰ বিশ্বাসৰ বাবে ধন্যবাদ! এই পূজাত ৰ'দৰ পোহৰ বিলাওক: PM Surya Ghar চাবচিডিৰে ₹78,000 লৈকে ৰেহাই, আৰু আপুনি অনা প্ৰতিজন বন্ধুৰ বাবে উপহাৰ! 🎁 চিনাকি কোনোবাই ছোলাৰ লগাব বিচাৰিছে নেকি? আমাৰ ওচৰলৈ পঠিয়াওক — আপোনাৰ উপহাৰ ৰৈ আছে! ✨ — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ 🌞"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! This Puja, share the sunshine: PM Surya Ghar subsidy up to ₹78,000 on rooftop solar, plus a gift for you for every friend you bring! 🎁 Know someone who wants solar? Send them to us — your gift is waiting! ✨ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপুনি আমাৰ পৰা ছোলাৰ লগোৱা {months} হ'ল — আপোনাৰ বিশ্বাসৰ বাবে ধন্যবাদ! এই পূজাত ৰ'দৰ পোহৰ বিলাওক: PM Surya Ghar চাবচিডিৰে ₹78,000 লৈকে ৰেহাই, আৰু আপুনি অনা প্ৰতিজন বন্ধুৰ বাবে উপহাৰ! 🎁 চিনাকি কোনোবাই ছোলাৰ লগাব বিচাৰিছে নেকি? আমাৰ ওচৰলৈ পঠিয়াওক — আপোনাৰ উপহাৰ ৰৈ আছে! ✨ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ 🌞"
   },
   referral: {
-    en: "🙏 Namaskar {name}! 🎉 Wonderful news — because of you, another home is shining with solar! You have brought {count} friend(s) to us so far. 🌞 Bring one more friend and your next gift is yours! 🎁 Check your rewards here: {link} — Saiful, SH Enterprise (Green Energy) ✨",
-    as: "🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ বাবে আন এখন ঘৰতো ছোলাৰ জিলিকিছে! আপুনি এতিয়ালৈকে {count} জন বন্ধুক আমাৰ ওচৰলৈ আনিছে। 🌞 আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব! 🎁 আপোনাৰ উপহাৰ ইয়াত চাওক: {link} — ছাইফুল, SH Enterprise (Green Energy) ✨"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉 Wonderful news — because of you, another home is shining with solar! You have brought {count} friend(s) to us so far. 🌞 Bring one more friend and your next gift is yours! 🎁 Check your rewards here: {link} See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy) ✨",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ বাবে আন এখন ঘৰতো ছোলাৰ জিলিকিছে! আপুনি এতিয়ালৈকে {count} জন বন্ধুক আমাৰ ওচৰলৈ আনিছে। 🌞 আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব! 🎁 আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy) ✨"
   },
   anniversary: {
-    en: "🙏 Namaskar {name}! 🎉☀️ Happy 1-year solar anniversary! A full year since we installed solar at your home — your electricity bill must be smiling by now. 😊 Need a panel cleaning or a free check-up? Just message us anytime! And if a friend wants solar, PM Surya Ghar subsidy up to ₹78,000 is waiting — plus a gift for you! 🎁 — Saiful, SH Enterprise (Green Energy)",
-    as: "🙏 নমস্কাৰ {name}! 🎉☀️ ছোলাৰৰ ১ বছৰ সম্পূৰ্ণ হোৱাৰ শুভেচ্ছা! আপোনাৰ ঘৰত ছোলাৰ লগোৱা এবছৰ হ'ল — বিদ্যুৎ বিল নিশ্চয় কমিছে। 😊 পেনেল চাফা বা বিনামূলীয়া পৰীক্ষা লাগিলে আমাক মেছেজ কৰক! আৰু কোনো বন্ধুৱে ছোলাৰ লগাব বিচাৰিলে PM Surya Ghar চাবচিডি ₹78,000 লৈকে পাব — আপোনাৰ বাবেও উপহাৰ আছে! 🎁 — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉☀️ Happy 1-year solar anniversary! A full year since we installed solar at your home — your electricity bill must be smiling by now. 😊 Need a panel cleaning or a free check-up? Just message us anytime! And if a friend wants solar, PM Surya Ghar subsidy up to ₹78,000 is waiting — plus a gift for you! 🎁 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉☀️ ছোলাৰৰ ১ বছৰ সম্পূৰ্ণ হোৱাৰ শুভেচ্ছা! আপোনাৰ ঘৰত ছোলাৰ লগোৱা এবছৰ হ'ল — বিদ্যুৎ বিল নিশ্চয় কমিছে। 😊 পেনেল চাফা বা বিনামূলীয়া পৰীক্ষা লাগিলে আমাক মেছেজ কৰক! আৰু কোনো বন্ধুৱে ছোলাৰ লগাব বিচাৰিলে PM Surya Ghar চাবচিডি ₹78,000 লৈকে পাব — আপোনাৰ বাবেও উপহাৰ আছে! 🎁 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_not_redeemed: {
-    en: "🙏 Namaskar {name}! ⏰ Your {kw} kW solar is installed — but your subsidy is still waiting to be redeemed! 💰 Don't miss it: open the PM Surya Ghar portal and redeem your subsidy today, or just message us and we will help you do it. ✅ — Saiful, SH Enterprise (Green Energy)",
-    as: "🙏 নমস্কাৰ {name}! ⏰ আপোনাৰ {kw} kW ছোলাৰ লগোৱা হৈ গৈছে — কিন্তু আপোনাৰ চাবচিডিটো এতিয়াও ৰিডিম কৰা হোৱা নাই! 💰 হেৰুৱাব নালাগে: আজিয়েই PM Surya Ghar পৰ্টেলত ৰিডিম কৰক, নহ'লে আমাক মেছেজ কৰক — আমি সহায় কৰিম। ✅ — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ⏰ Your {kw} kW solar is installed — but your subsidy is still waiting to be redeemed! 💰 Don't miss it: open the PM Surya Ghar portal and redeem your subsidy today, or just message us and we will help you do it. ✅ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ⏰ আপোনাৰ {kw} kW ছোলাৰ লগোৱা হৈ গৈছে — কিন্তু আপোনাৰ চাবচিডিটো এতিয়াও ৰিডিম কৰা হোৱা নাই! 💰 হেৰুৱাব নালাগে: আজিয়েই PM Surya Ghar পৰ্টেলত ৰিডিম কৰক, নহ'লে আমাক মেছেজ কৰক — আমি সহায় কৰিম। ✅ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_return: {
-    en: "🙏 Namaskar {name}! 📄 Your subsidy application came back for one small correction — no need to worry! Just send us the corrected document or photo and we will resubmit it right away. ✅ Message us now and let's get your subsidy moving! 💰 — Saiful, SH Enterprise (Green Energy)",
-    as: "🙏 নমস্কাৰ {name}! 📄 আপোনাৰ চাবচিডি আবেদনখন সৰু ভুল এটাৰ বাবে ঘূৰাই দিয়া হৈছে — চিন্তা কৰিব নালাগে! শুদ্ধ কাগজ বা ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ আকৌ জমা দিম। ✅ এতিয়াই মেছেজ কৰক, চাবচিডিটো সোনকালে পোৱাৰ ব্যৱস্থা কৰোঁ! 💰 — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 📄 Your subsidy application came back for one small correction — no need to worry! Just send us the corrected document or photo and we will resubmit it right away. ✅ Message us now and let's get your subsidy moving! 💰 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 📄 আপোনাৰ চাবচিডি আবেদনখন সৰু ভুল এটাৰ বাবে ঘূৰাই দিয়া হৈছে — চিন্তা কৰিব নালাগে! শুদ্ধ কাগজ বা ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ আকৌ জমা দিম। ✅ এতিয়াই মেছেজ কৰক, চাবচিডিটো সোনকালে পোৱাৰ ব্যৱস্থা কৰোঁ! 💰 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_installation: {
-    en: "🙏 Namaskar {name}! ☀️ Your {kw} kW solar is ready to shine at your home — we are just waiting for your date! 📅 Tell us a day that suits you and our team will come and install it. Plus, PM Surya Ghar subsidy up to ₹78,000 is waiting for you after installation! 💰 — Saiful, SH Enterprise (Green Energy)",
-    as: "🙏 নমস্কাৰ {name}! ☀️ আপোনাৰ {kw} kW ছোলাৰ আপোনাৰ ঘৰত জিলিকিবলৈ সাজু — আমি কেৱল আপোনাৰ দিনটোৰ অপেক্ষাত! 📅 সুবিধাৰ দিন এটা জনাওক, আমাৰ দলে আহি লগাই দিব। লগোৱাৰ পিছত PM Surya Ghar চাবচিডি ₹78,000 লৈকে আপোনাৰ বাবে ৰৈ আছে! 💰 — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ Your {kw} kW solar is ready to shine at your home — we are just waiting for your date! 📅 Tell us a day that suits you and our team will come and install it. Plus, PM Surya Ghar subsidy up to ₹78,000 is waiting for you after installation! 💰 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপোনাৰ {kw} kW ছোলাৰ আপোনাৰ ঘৰত জিলিকিবলৈ সাজু — আমি কেৱল আপোনাৰ দিনটোৰ অপেক্ষাত! 📅 সুবিধাৰ দিন এটা জনাওক, আমাৰ দলে আহি লগাই দিব। লগোৱাৰ পিছত PM Surya Ghar চাবচিডি ₹78,000 লৈকে আপোনাৰ বাবে ৰৈ আছে! 💰 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_agreement: {
-    en: "🙏 Namaskar {name}! 📝 Your solar agreement is the last step before installation — just one signature away! ✍️ Please send us a photo of the signed agreement and we will upload it on the portal for you right away. ✅ — Saiful, SH Enterprise (Green Energy)",
-    as: "🙏 নমস্কাৰ {name}! 📝 আপোনাৰ ছোলাৰ এগ্ৰিমেণ্টখনেই লগোৱাৰ আগৰ শেষ খোজ — মাত্ৰ এটা চহীৰ দূৰত্বত! ✍️ চহী কৰা এগ্ৰিমেণ্টৰ ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ পৰ্টেলত আপলোড কৰি দিম। ✅ — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 📝 Your solar agreement is the last step before installation — just one signature away! ✍️ Please send us a photo of the signed agreement and we will upload it on the portal for you right away. ✅ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 📝 আপোনাৰ ছোলাৰ এগ্ৰিমেণ্টখনেই লগোৱাৰ আগৰ শেষ খোজ — মাত্ৰ এটা চহীৰ দূৰত্বত! ✍️ চহী কৰা এগ্ৰিমেণ্টৰ ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ পৰ্টেলত আপলোড কৰি দিম। ✅ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_inspection: {
-    en: "🙏 Namaskar {name}! 🔍 The inspection of your {kw} kW solar plant is coming up — almost there! ✅ Please keep the plant area clear and your documents ready. The inspector may visit any day. Questions? Just message us! 📱 — Saiful, SH Enterprise (Green Energy)",
-    as: "🙏 নমস্কাৰ {name}! 🔍 আপোনাৰ {kw} kW ছোলাৰ প্লাণ্টৰ পৰিদৰ্শন আহি আছে — আৰু অলপ বাকী! ✅ প্লাণ্টৰ ঠাই মুকলি ৰাখক আৰু কাগজবোৰ সাজু ৰাখক। পৰিদৰ্শক যিকোনো দিন আহিব পাৰে। কিবা প্ৰশ্ন থাকিলে আমাক মেছেজ কৰক! 📱 — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🔍 The inspection of your {kw} kW solar plant is coming up — almost there! ✅ Please keep the plant area clear and your documents ready. The inspector may visit any day. Questions? Just message us! 📱 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🔍 আপোনাৰ {kw} kW ছোলাৰ প্লাণ্টৰ পৰিদৰ্শন আহি আছে — আৰু অলপ বাকী! ✅ প্লাণ্টৰ ঠাই মুকলি ৰাখক আৰু কাগজবোৰ সাজু ৰাখক। পৰিদৰ্শক যিকোনো দিন আহিব পাৰে। কিবা প্ৰশ্ন থাকিলে আমাক মেছেজ কৰক! 📱 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_disbursal: {
-    en: "🙏 Namaskar {name}! 🎉 Good news — your subsidy is approved! 💰 The money is on its way from the department to your bank account. We are following up every day, and the moment it arrives we will message you. ✅ — Saiful, SH Enterprise (Green Energy)",
-    as: "🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ চাবচিডি অনুমোদন হৈছে! 💰 টকা বিভাগৰ পৰা আপোনাৰ বেংক একাউণ্টলৈ আহি আছে। আমি প্ৰতিদিনে তাৰ পিছত লাগি আছোঁ — টকা সোমোৱা মাত্ৰকে আপোনাক জনাম। ✅ — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉 Good news — your subsidy is approved! 💰 The money is on its way from the department to your bank account. We are following up every day, and the moment it arrives we will message you. ✅ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ চাবচিডি অনুমোদন হৈছে! 💰 টকা বিভাগৰ পৰা আপোনাৰ বেংক একাউণ্টলৈ আহি আছে। আমি প্ৰতিদিনে তাৰ পিছত লাগি আছোঁ — টকা সোমোৱা মাত্ৰকে আপোনাক জনাম। ✅ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
+  }
+};
+/* Funny / meme-style variants of the same 9 templates, written
+   with Gemini and baked in. The Messages tab and the customer
+   page let the vendor swap Regular <-> Funny per message. */
+var FUNNY_TEMPLATES = {
+  "puja": {
+    "as": "☀️🏮✨🏮☀️\nনমস্কাৰ {name}! আপোনাৰ চাবচিডি পোৱা হ’ল, এতিয়া আনকো পোহৰ বিলাই দিয়ক! এই পূজাৰ বতৰত বন্ধু-বান্ধৱক ৰেফাৰ কৰক আৰু পুৰস্কাৰ লাভ কৰক। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "☀️🏮✨🏮☀️\nHi {name}! As you enjoy your subsidy benefits, spread the light! Refer friends to us this Puja and get rewarded. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "referral": {
+    "as": "🚀⚡💰⚡💰⚡🚀\nনমস্কাৰ {name}! আপোনাৰ ৰেফাৰেলৰ বাবে ধন্যবাদ! এতিয়ালৈকে আপুনি {count} জনক ৰেফাৰ কৰিছে। আগুৱাই যাওক, ডাঙৰ পুৰস্কাৰ পাবলৈ! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "🚀⚡💰⚡🚀\nHey {name}! Thanks for the referral! You have {count} referrals now. Keep it up to unlock your next big reward! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "anniversary": {
+    "as": "🎂☀️🛠️☀️🎂\nশুভ প্ৰথম বাৰ্ষিকী {name}! {months} মাহৰ বিজুলী বিলৰ বচত কেনেকুৱা চলিছে? পেনেল চাফা আৰু পৰীক্ষা কৰিবলৈ আমি এবাৰ আহোঁ নেকি? আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "🎂☀️🛠️☀️🎂\nHappy 1st Anniversary, {name}! {months} months of savings! How is the solar life? Let us come by for a free panel cleaning and checkup. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_not_redeemed": {
+    "as": "⏳💸⚡💸⏳\nনমস্কাৰ {name}! আপোনাৰ চাবচিডিৰ টকা ৰৈ আছে। সোনকালে ক্লেইম কৰক, হেৰুৱাব নালাগে! আজি কিবা সহায় লাগে নেকি? আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "⏳💸⚡💸⏳\nHey {name}! Your subsidy is waiting to be redeemed. Don't leave free money on the table! Let's get it done today. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_return": {
+    "as": "📝🔍⚡🔍📝\nনমস্কাৰ {name}! আপোনাৰ চাবচিডিৰ আবেদনত অলপ ভুলৰ বাবে বিভাগে ঘূৰাই পঠাইছে। অনুগ্ৰহ কৰি শুদ্ধ নথিপত্ৰখন দিয়ক, আমি পুনৰ জমা দিম! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "📝🔍⚡🔍📝\nOops {name}! The department returned your subsidy application for a small correction. Please send the updated doc so we can re-submit! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_installation": {
+    "as": "🏗️⚡☀️⚡🏗️\nনমস্কাৰ {name}! আপোনাৰ {kw} ছ’লাৰ চিষ্টেমটো বহুৱাবলৈ বাকী আছে। আজি এটা তাৰিখ ঠিক কৰোঁ নেকি? আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "🏗️⚡☀️⚡🏗️\nReady to go green, {name}? Your {kw} system installation is pending. Let's pick a date to power up your roof! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_agreement": {
+    "as": "✍️📄⚡📄✍️\nনমস্কাৰ {name}! প্ৰায় শেষ হৈ আহিছে! অনুগ্ৰহ কৰি স্বাক্ষৰ কৰা এগ্ৰিমেণ্টখনৰ এখন ফটো পঠাওক যাতে আমি আগুৱাব পাৰোঁ। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "✍️📄⚡📄✍️\nHi {name}! We are almost there! Please share a clear photo of your signed agreement so we can proceed. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_inspection": {
+    "as": "📋👷⚡👷📋\nনমস্কাৰ {name}! ইনচপেকচন হ’বলৈ আহিছে। অনুগ্ৰহ কৰি প্লেন্টৰ ঠাইখিনি পৰিষ্কাৰ কৰি ৰাখিব আৰু নথিপত্ৰবোৰ সাজু কৰি থ’ব। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "📋👷⚡👷📋\nHey {name}! Inspection is coming up. Please keep the plant area clear and your documents handy. Let's shine! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_disbursal": {
+    "as": "🏦⚡⌛⚡🏦\nখবৰ ভাল {name}! আপোনাৰ চাবচিডি এপ্ৰুভ হৈছে। টকাখিনি পাবলৈ আমি বিভাগৰ লগত যোগাযোগ কৰি আছোঁ, চিন্তা নকৰিব। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
+    "en": "🏦⚡⌛⚡🏦\nGreat news {name}! Your subsidy is approved. We are actively following up with the department for the transfer. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   }
 };
 var REMINDER_BY_STAGE = {
@@ -152,6 +202,7 @@ function defaultMeta() {
   return {
     settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
     templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
+    funnyTemplates: JSON.parse(JSON.stringify(FUNNY_TEMPLATES)),
     templatesVersion: TEMPLATES_VERSION
   };
 }
@@ -253,10 +304,13 @@ function fillTemplate(text, c, lang) {
     .replace(/\{months\}/g, monthsText(m, lang))
     .replace(/\{count\}/g, String(referralCount(c.id)))
     .replace(/\{kw\}/g, String(c.systemKw == null ? '' : c.systemKw))
-    .replace(/\{link\}/g, rewardLink(c));
+    .replace(/\{link\}/g, rewardLink(c))
+    .replace(/\{poster\}/g, (meta.settings && meta.settings.posterUrl) || DEFAULT_SETTINGS.posterUrl);
 }
-function buildMessage(key, c) {
-  var t = (meta.templates && meta.templates[key]) || DEFAULT_TEMPLATES[key];
+function buildMessage(key, c, style) {
+  var t = (style === 'funny')
+    ? ((meta.funnyTemplates && meta.funnyTemplates[key]) || FUNNY_TEMPLATES[key] || DEFAULT_TEMPLATES[key])
+    : ((meta.templates && meta.templates[key]) || DEFAULT_TEMPLATES[key]);
   return { en: fillTemplate(t.en, c, 'en'), as: fillTemplate(t.as, c, 'as'),
     combined: fillTemplate(t.en, c, 'en') + '\n\n' + fillTemplate(t.as, c, 'as') };
 }
@@ -541,12 +595,17 @@ var SampleDB = {
     if (!stored) return Promise.resolve(defaultMeta());
     var storedVersion = stored.templatesVersion || 0;
     if (storedVersion < TEMPLATES_VERSION) {
-      /* Templates were rewritten in v2 (emoji, new wording). Stored old
-         templates would override the new defaults — replace them and
-         save the upgrade back so the next load already has v2. */
+      /* Templates were rewritten in v3 (emoji banner, poster link, funny
+         variants, bumper offer = referral reward). Stored old templates
+         would override the new defaults — replace them and save the
+         upgrade back so the next load already has v3. */
+      var upgradedSettings = Object.assign({}, DEFAULT_SETTINGS, stored.settings || {});
+      if (upgradedSettings.offerTitle === OLD_OFFER_TITLE) upgradedSettings.offerTitle = DEFAULT_SETTINGS.offerTitle;
+      if (upgradedSettings.offerText === OLD_OFFER_TEXT) upgradedSettings.offerText = DEFAULT_SETTINGS.offerText;
       var upgraded = {
-        settings: Object.assign({}, DEFAULT_SETTINGS, stored.settings || {}),
+        settings: upgradedSettings,
         templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
+        funnyTemplates: JSON.parse(JSON.stringify(FUNNY_TEMPLATES)),
         templatesVersion: TEMPLATES_VERSION
       };
       store.save(LS_KEY, upgraded);
@@ -554,6 +613,7 @@ var SampleDB = {
     }
     stored.settings = Object.assign({}, DEFAULT_SETTINGS, stored.settings || {});
     stored.templates = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), stored.templates || {});
+    stored.funnyTemplates = Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), stored.funnyTemplates || {});
     return Promise.resolve(stored);
   },
   saveMeta: function (m) { store.save(LS_KEY, m); return Promise.resolve(); }
@@ -646,14 +706,18 @@ var FirestoreDB = {
       var settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
       var storedVersion = d.templatesVersion || 0;
       if (storedVersion < TEMPLATES_VERSION) {
-        /* Templates were rewritten in v2 (emoji, new wording). The stored
-           doc still holds the old wording, and it overrides the new
-           defaults — replace it and save the upgrade back so the next
-           login already has v2. No human has edited templates yet, so
-           nothing deliberate is lost. */
+        /* Templates were rewritten in v3 (emoji banner, poster link, funny
+           variants, bumper offer = referral reward). The stored doc still
+           holds the old wording, and it overrides the new defaults —
+           replace it and save the upgrade back so the next login already
+           has v3. No human has edited templates yet, so nothing
+           deliberate is lost. */
+        if (settings.offerTitle === OLD_OFFER_TITLE) settings.offerTitle = DEFAULT_SETTINGS.offerTitle;
+        if (settings.offerText === OLD_OFFER_TEXT) settings.offerText = DEFAULT_SETTINGS.offerText;
         var upgraded = {
           settings: settings,
           templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
+          funnyTemplates: JSON.parse(JSON.stringify(FUNNY_TEMPLATES)),
           templatesVersion: TEMPLATES_VERSION
         };
         return db.collection('meta').doc('settings').set(upgraded, { merge: true }).then(function () { return upgraded; });
@@ -661,12 +725,13 @@ var FirestoreDB = {
       return {
         settings: settings,
         templates: Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), d.templates || {}),
+        funnyTemplates: Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), d.funnyTemplates || {}),
         templatesVersion: storedVersion
       };
     });
   },
   saveMeta: function (m) {
-    return db.collection('meta').doc('settings').set({ settings: m.settings, templates: m.templates, templatesVersion: m.templatesVersion || TEMPLATES_VERSION }, { merge: true });
+    return db.collection('meta').doc('settings').set({ settings: m.settings, templates: m.templates, funnyTemplates: m.funnyTemplates || JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), templatesVersion: m.templatesVersion || TEMPLATES_VERSION }, { merge: true });
   }
 };
 
@@ -691,6 +756,8 @@ if (typeof document !== 'undefined') {
   ];
   var listState = { q: '', status: '', subDiv: '', kw: '', sort: 'submitted-desc' };
   var msgKey = 'puja';
+  var msgStyle = 'regular';   /* 'regular' | 'funny' — Messages tab + customer page */
+  var msgAI = null;           /* Gemini-personalized message {en, as, combined} or null */
   /* Messages tab state: which template, which customer, search, disbursed-only filter. */
   var msgCustomerId = null;
   var msgSearch = '';
@@ -708,8 +775,8 @@ if (typeof document !== 'undefined') {
   }
   /* Bumper-offer banner — bright, editable in Settings. Shown on the
      Dashboard and the Messages tab. Clear the title + text in Settings
-     to hide it. The default text states only the real PM Surya Ghar
-     subsidy slabs — the vendor replaces it with his real offer. */
+     to hide it. The bumper offer is the referral reward — the subsidy is
+     a secondary line. The vendor replaces it with his real offer. */
   function offerBannerHTML() {
     var o = meta.settings;
     if (!o.offerTitle && !o.offerText) return '';
@@ -717,10 +784,11 @@ if (typeof document !== 'undefined') {
     return '<div class="offer-banner"><div class="offer-title">' + esc(o.offerTitle) + '</div>' +
       '<div class="offer-text">' + esc(o.offerText) + valid + '</div></div>';
   }
-  /* Honest hint under every SMS button: a website cannot send an SMS
-     by itself — the phone's SMS app does the sending. */
+  /* Hint under every SMS button: the sms: prefill works in Google
+     Messages, but SMS Organizer and Truecaller do not support it — the
+     vendor should switch the default SMS app to Google Messages. */
   function smsHint() {
-    return '<p class="sub sms-hint">📱 Opens your phone\u2019s SMS app with the number and message already filled in — just tap send.</p>';
+    return '<p class="sub sms-hint">📱 Works best with Google Messages — if your SMS app opens without the number and message, switch your default SMS app to Google Messages.</p>';
   }
   function renderTabs(active) {
     tabs.innerHTML = NAV.map(function (n) {
@@ -857,10 +925,48 @@ if (typeof document !== 'undefined') {
     return { id: '__preview', code: '__preview', name: 'Ramesh', mobile: '', systemKw: 3,
       installDate: '2026-01-01', submittedOn: '2026-01-01', referredBy: null, referralCount: 0, rewards: [] };
   }
+  /* The message text currently shown: a Gemini-personalized version when
+     one was just made, otherwise the chosen template (regular/funny). */
+  window.currentMsgText = function (c) {
+    if (msgAI) return msgAI.combined;
+    return buildMessage(msgKey, c, msgStyle).combined;
+  };
+  /* Personalize the shown message with Gemini. The API key comes from
+     Settings (stored in the Firestore meta doc only, never in the repo
+     or logs). No key -> hint where to get a free one. */
+  window.personalizeMessage = function (customerId, btn) {
+    var c = customerId ? customerById(customerId) : (msgCustomerId ? customerById(msgCustomerId) : null);
+    if (!c) { alert('Pick a customer first — tap a name below.'); return; }
+    var s = meta.settings || {};
+    var key = (s.geminiApiKey || '').trim();
+    if (!key) { alert('Add your free Gemini API key in Settings — get one at Google AI Studio (aistudio.google.com).'); return; }
+    var model = (s.geminiModel || 'gemini-2.0-flash').trim() || 'gemini-2.0-flash';
+    var base = buildMessage(msgKey, c, msgStyle);
+    var months = monthsBetween(c.installDate || c.submittedOn);
+    var prompt = 'You write WhatsApp messages for a rooftop solar vendor in Goalpara, Assam. Rewrite the message below to be warmer and more personal for this customer. Keep it short and friendly, in the same two parts: first the English version, then the same message in Assamese (proper Assamese script). Keep the customer first name, all numbers, the reward link and the poster link exactly as they are — do not change, drop or invent any of them. Reply ONLY with JSON: {"en": "...", "as": "..."}.\n\nCustomer: first name ' + firstName(c.name) + ', ' + months + ' month(s) since install, ' + c.systemKw + ' kW system, ' + referralCount(c.id) + ' referral(s), stage: ' + c.status + '.\n\nMessage:\n' + base.combined;
+    var old = btn ? btn.textContent : '';
+    if (btn) btn.textContent = '✨ Personalizing…';
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } })
+    }).then(function (resp) { return resp.json(); }).then(function (data) {
+      var text = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+      if (!text) throw new Error('empty');
+      var out = JSON.parse(text);
+      if (!out.en || !out.as) throw new Error('bad');
+      msgAI = { en: out.en, as: out.as, combined: out.en + '\n\n' + out.as };
+      if (location.hash.indexOf('#customer-') === 0) renderCustomer(location.hash.slice('#customer-'.length));
+      else renderMessages();
+    }).catch(function () {
+      alert('Could not personalize — check the Gemini API key and model in Settings and try again.');
+    }).finally(function () { if (btn) btn.textContent = old; });
+  };
+
   window.sendMsg = function (kind, btn) {
     var c = msgCustomerId ? customerById(msgCustomerId) : null;
     if (!c) { alert('Pick a customer first — tap a name below.'); return; }
-    var msg = buildMessage(msgKey, c).combined;
+    var msg = currentMsgText(c);
     if (kind === 'wa') window.open(waLink(c, msg), '_blank');
     else if (kind === 'sms') openSms(c, msg);
     else copyText(msg, btn);
@@ -876,17 +982,19 @@ if (typeof document !== 'undefined') {
       return '<option value="' + k + '"' + (msgKey === k ? ' selected' : '') + '>' + TEMPLATE_NAMES[k] + '</option>';
     }).join('');
     var pickRows = matches.map(function (x) {
-      return '<div class="pick-row" onclick="msgCustomerId=\'' + x.id + '\';renderMessages()"><div><b>' + esc(x.name) + '</b> · ' + esc(x.consumerNo) + '<br><span style="color:var(--muted);font-size:12.5px">' + esc(stageEmoji(x.status)) + ' ' + esc(x.status) + ' · ' + esc(x.systemKw) + ' kW</span></div><span style="font-size:22px;color:var(--muted)">›</span></div>';
+      return '<div class="pick-row" onclick="msgCustomerId=\'' + x.id + '\';msgAI=null;renderMessages()"><div><b>' + esc(x.name) + '</b> · ' + esc(x.consumerNo) + '<br><span style="color:var(--muted);font-size:12.5px">' + esc(stageEmoji(x.status)) + ' ' + esc(x.status) + ' · ' + esc(x.systemKw) + ' kW</span></div><span style="font-size:22px;color:var(--muted)">›</span></div>';
     }).join('');
-    var msg = buildMessage(msgKey, c || previewCustomer());
+    var msgText = currentMsgText(c || previewCustomer());
     view.innerHTML =
       '<h2>💬 Messages</h2><p class="sub">Pick a template, pick a customer, tap send. English + Assamese in one message — name, months, referrals and reward link fill in by themselves.</p>' +
       offerBannerHTML() +
       (mode === 'sample' ? sampleBanner() : '') +
       '<div class="card"><h3 style="margin-top:0">1 · Choose a message 💬</h3>' +
-      '<select id="msgTpl2" onchange="msgKey=this.value;renderMessages()">' + tplOptions + '</select></div>' +
+      '<select id="msgTpl2" onchange="msgKey=this.value;msgAI=null;renderMessages()">' + tplOptions + '</select>' +
+      '<div class="btnrow" style="margin-top:8px"><button class="' + (msgStyle === 'regular' ? '' : 'secondary') + '" onclick="msgStyle=\'regular\';msgAI=null;renderMessages()">😊 Regular</button>' +
+      '<button class="' + (msgStyle === 'funny' ? '' : 'secondary') + '" onclick="msgStyle=\'funny\';msgAI=null;renderMessages()">😂 Funny</button></div></div>' +
       '<div class="card"><h3 style="margin-top:0">2 · Choose a customer 👥</h3>' +
-      (c ? '<p style="margin:0 0 10px">✅ <b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW · ' + esc(c.status) + ' <a href="#" onclick="msgCustomerId=null;renderMessages();return false;">Change</a></p>'
+      (c ? '<p style="margin:0 0 10px">✅ <b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW · ' + esc(c.status) + ' <a href="#" onclick="msgCustomerId=null;msgAI=null;renderMessages();return false;">Change</a></p>'
         : '<div class="btnrow" style="margin:0 0 10px"><button class="' + (msgOnlyDisbursed ? 'secondary' : '') + '" onclick="msgOnlyDisbursed=false;renderMessages()">All customers</button>' +
           '<button class="' + (msgOnlyDisbursed ? '' : 'secondary') + '" onclick="msgOnlyDisbursed=true;renderMessages()">✅ Disbursed only</button></div>' +
           '<input id="mq" placeholder="Search name, consumer no., mobile…" value="' + esc(msgSearch) + '" oninput="msgSearch=this.value;renderMessages()">' +
@@ -894,12 +1002,16 @@ if (typeof document !== 'undefined') {
           '<p class="sub" style="margin-top:8px">💡 Tip: switch to “Disbursed only” to message your happy customers one by one for referrals.</p>') +
       '</div>' +
       '<div class="card"><h3 style="margin-top:0">3 · Preview &amp; send ' + (c ? 'to ' + esc(firstName(c.name)) : '(sample preview — pick a customer to fill in their details)') + '</h3>' +
-      '<div class="msgbox">' + esc(msg.combined) + '</div>' +
+      '<div class="msgbox">' + esc(msgText) + '</div>' +
+      (msgAI ? '<p class="sub">✨ AI-personalized version — <a href="#" onclick="msgAI=null;renderMessages();return false;">use the template instead</a></p>' : '') +
       '<div class="btnrow big">' +
       '<button class="whatsapp" onclick="sendMsg(\'wa\', this)">💬 WhatsApp</button>' +
       '<button class="sms" onclick="sendMsg(\'sms\', this)">✉️ SMS</button>' +
       '<button class="secondary" onclick="sendMsg(\'copy\', this)">📋 Copy message</button>' +
-      '</div>' + smsHint() + '</div>';
+      '<button class="secondary" onclick="personalizeMessage(null, this)">✨ Personalize with AI</button>' +
+      '</div>' +
+      ((meta.settings && meta.settings.geminiApiKey) ? '' : '<p class="sub">✨ Personalize with AI needs a key — add your free Gemini API key in Settings (get one at Google AI Studio, aistudio.google.com).</p>') +
+      smsHint() + '</div>';
     var mq = document.getElementById('mq');
     if (mq) { mq.focus(); mq.setSelectionRange(mq.value.length, mq.value.length); }
   }
@@ -996,7 +1108,7 @@ if (typeof document !== 'undefined') {
     var refs = referredList(c.id);
     var t = tierReached(c);
     var link = rewardLink(c);
-    var msg = buildMessage(msgKey, c);
+    var msgText = currentMsgText(c);
     var flags = (c.duplicate ? ' <span class="pill due">Duplicate entry — check</span>' : '') +
       (c.reverification ? ' <span class="pill due">Reverification needed</span>' : '');
     var remind = buildReminder(c);
@@ -1030,16 +1142,22 @@ if (typeof document !== 'undefined') {
       '<div class="btnrow"><button class="secondary" onclick="copyText(\'' + esc(link).replace(/'/g, "\\'") + '\', this)">Copy reward link</button></div>' +
       '</div>' +
       '<div class="card"><h3 style="margin-top:0">Message this customer</h3>' +
-      '<div class="row"><select id="msgTpl" onchange="msgKey=this.value;renderCustomer(\'' + c.id + '\')">' +
+      '<div class="row"><select id="msgTpl" onchange="msgKey=this.value;msgAI=null;renderCustomer(\'' + c.id + '\')">' +
       ['puja', 'referral', 'anniversary'].map(function (k) { return '<option value="' + k + '"' + (msgKey === k ? ' selected' : '') + '>' + TEMPLATE_NAMES[k] + '</option>'; }).join('') +
       '</select></div>' +
+      '<div class="btnrow" style="margin-top:8px"><button class="' + (msgStyle === 'regular' ? '' : 'secondary') + '" onclick="msgStyle=\'regular\';msgAI=null;renderCustomer(\'' + c.id + '\')">😊 Regular</button>' +
+      '<button class="' + (msgStyle === 'funny' ? '' : 'secondary') + '" onclick="msgStyle=\'funny\';msgAI=null;renderCustomer(\'' + c.id + '\')">😂 Funny</button></div>' +
       '<p class="sub">English + Assamese in one message. Name, months since install, referral count and reward link are filled in automatically.</p>' +
-      '<div class="msgbox">' + esc(msg.combined) + '</div>' +
+      '<div class="msgbox">' + esc(msgText) + '</div>' +
+      (msgAI ? '<p class="sub">✨ AI-personalized version — <a href="#" onclick="msgAI=null;renderCustomer(\'' + c.id + '\');return false;">use the template instead</a></p>' : '') +
       '<div class="btnrow">' +
-      '<button class="whatsapp" onclick="window.open(waLink(customerById(\'' + c.id + '\'), buildMessage(msgKey, customerById(\'' + c.id + '\')).combined), \'_blank\')">WhatsApp</button>' +
-      '<button class="sms" onclick="openSms(customerById(\'' + c.id + '\'), buildMessage(msgKey, customerById(\'' + c.id + '\')).combined)">SMS</button>' +
-      '<button class="secondary" onclick="copyText(buildMessage(msgKey, customerById(\'' + c.id + '\')).combined, this)">Copy message</button>' +
-      '</div>' + smsHint() + '</div>' +
+      '<button class="whatsapp" onclick="window.open(waLink(customerById(\'' + c.id + '\'), currentMsgText(customerById(\'' + c.id + '\'))), \'_blank\')">WhatsApp</button>' +
+      '<button class="sms" onclick="openSms(customerById(\'' + c.id + '\'), currentMsgText(customerById(\'' + c.id + '\')))">SMS</button>' +
+      '<button class="secondary" onclick="copyText(currentMsgText(customerById(\'' + c.id + '\')), this)">Copy message</button>' +
+      '<button class="secondary" onclick="personalizeMessage(\'' + c.id + '\', this)">✨ Personalize with AI</button>' +
+      '</div>' +
+      ((meta.settings && meta.settings.geminiApiKey) ? '' : '<p class="sub">✨ Personalize with AI needs a key — add your free Gemini API key in Settings (get one at Google AI Studio, aistudio.google.com).</p>') +
+      smsHint() + '</div>' +
       '<div class="card"><h3 style="margin-top:0">Edit details</h3>' +
       '<label>Address</label><input id="f-address" value="' + esc(c.address) + '">' +
       '<label>Install date</label><input id="f-install" type="date" value="' + esc(c.installDate) + '">' +
@@ -1208,8 +1326,13 @@ if (typeof document !== 'undefined') {
       '<label>2 referrals get</label><input id="s-t2" value="' + esc(s.tiers['2']) + '">' +
       '<label>3+ referrals get</label><input id="s-t3" value="' + esc(s.tiers['3']) + '">' +
       '<p class="sub">These are editable examples — set what you actually give.</p></div>' +
+      '<div class="card"><h3 style="margin-top:0">✨ AI personalization (Gemini)</h3>' +
+      '<p class="sub">Powers the “Personalize with AI” button in Messages. The key is stored in Firebase only — never in the app code or this public site. Get a free key at Google AI Studio (aistudio.google.com).</p>' +
+      '<label>Gemini API key</label><input id="s-gemini-key" type="password" value="' + esc(s.geminiApiKey || '') + '" placeholder="Paste your Gemini API key">' +
+      '<label>Gemini model</label><input id="s-gemini-model" value="' + esc(s.geminiModel || 'gemini-2.0-flash') + '">' +
+      '</div>' +
       '<div class="card"><h3 style="margin-top:0">Message templates (English + Assamese in one message)</h3>' +
-      '<p class="sub">Placeholders: {name} first name · {months} months since install · {count} referrals · {kw} system size · {link} reward link. The app fills them in for each customer.</p>' +
+      '<p class="sub">Placeholders: {name} first name · {months} months since install · {count} referrals · {kw} system size · {link} reward link · {poster} offer poster link. The app fills them in for each customer.</p>' +
       Object.keys(TEMPLATE_NAMES).map(function (k) {
         return '<label>' + TEMPLATE_NAMES[k] + ' — English</label><textarea id="t-' + k + '-en">' + esc(t[k].en) + '</textarea>' +
           '<label>' + TEMPLATE_NAMES[k] + ' — Assamese</label><textarea id="t-' + k + '-as">' + esc(t[k].as) + '</textarea>';
@@ -1223,6 +1346,7 @@ if (typeof document !== 'undefined') {
   window.resetTemplates = function () {
     if (!confirm('Reset all message templates to the latest version? Any edits you made to the messages will be replaced.')) return;
     meta.templates = JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
+    meta.funnyTemplates = JSON.parse(JSON.stringify(FUNNY_TEMPLATES));
     meta.templatesVersion = TEMPLATES_VERSION;
     activeDB.saveMeta(meta).then(function () { saveMeta(); renderSettings(); alert('Messages reset to the latest version.'); });
   };
@@ -1236,6 +1360,8 @@ if (typeof document !== 'undefined') {
     meta.settings.offerTitle = document.getElementById('s-offer-title').value.trim();
     meta.settings.offerText = document.getElementById('s-offer-text').value.trim();
     meta.settings.offerValidTill = document.getElementById('s-offer-till').value;
+    meta.settings.geminiApiKey = document.getElementById('s-gemini-key').value.trim();
+    meta.settings.geminiModel = document.getElementById('s-gemini-model').value.trim() || 'gemini-2.0-flash';
     meta.settings.tiers['1'] = document.getElementById('s-t1').value.trim();
     meta.settings.tiers['2'] = document.getElementById('s-t2').value.trim();
     meta.settings.tiers['3'] = document.getElementById('s-t3').value.trim();
