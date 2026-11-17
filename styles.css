@@ -95,6 +95,15 @@ main { max-width: 960px; margin: 0 auto; padding: 16px 14px 60px; }
 h2 { font-size: 20px; margin: 6px 0 4px; }
 h3 { font-size: 16px; margin: 18px 0 8px; }
 .sub { color: var(--muted); font-size: 13.5px; margin: 0 0 14px; }
+.err { color: var(--red); margin: 2px 0 0; }
+/* Referral journey — four steps, Invited → Signed up → Got solar →
+   Reward earned. Done steps are green; the next step is outlined. */
+.steps { display: flex; gap: 6px; margin: 10px 0; }
+.steps .step { flex: 1; text-align: center; font-size: 12px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); }
+.steps .step.done { background: #e6f4ea; border-color: #86c79a; color: var(--green-dark); font-weight: 600; }
+.steps .step.now { border-color: var(--green); color: var(--green-dark); font-weight: 600; }
+/* Notification permission card on the customer reward page. */
+.notify-card { background: var(--amber-soft); border: 1px solid #f0d48a; }
 .card {
   background: var(--card);
   border: 1px solid var(--line);

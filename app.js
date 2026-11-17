@@ -120,21 +120,25 @@ var OLD_OFFER_TEXT_V3 = 'Refer a friend and earn gifts! Plus PM Surya Ghar subsi
    stored meta doc otherwise overrides the new defaults with the old wording.
    A vendor's own edits are kept only when the stored version is current.
    v4: Puja offer -> Festival offer with an occasion picker; poster link
-   is the short link. */
-var TEMPLATES_VERSION = 4;
+   is the short link.
+   v5: festival/referral/anniversary messages now print the customer's
+   refer code ({referCode}) and reward link ({link}); the stored-template
+   upgrade now replaces the stored maps wholesale — a Firestore merge
+   kept the old "puja" key alive inside the stored map after v4. */
+var TEMPLATES_VERSION = 5;
 
 var DEFAULT_TEMPLATES = {
   festival: {
-    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! {greeting} This {occasion}, share the sunshine: we take care of every new customer — installation, paperwork, subsidy process and after-care — and we have installed solar across 13 sub-divisions. Bring a friend and earn a gift for every friend you bring! 🎁 Know someone who wants solar? Send them to us — your gift is waiting! ✨ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
-    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপুনি আমাৰ পৰা ছোলাৰ লগোৱা {months} হ'ল — আপোনাৰ বিশ্বাসৰ বাবে ধন্যবাদ! {greeting} এই {occasion}ত ৰ'দৰ পোহৰ বিলাওক: আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — লগোৱা, কাগজপত্ৰ, চাবচিডিৰ কাম আৰু পিছৰ যত্ন — আৰু আমি ১৩টা মহকুমাত ছোলাৰ লগাইছোঁ। বন্ধুক আনিলে প্ৰতিজনৰ বাবে উপহাৰ পাব! 🎁 চিনাকি কোনোবাই ছোলাৰ লগাব বিচাৰিছে নেকি? আমাৰ ওচৰলৈ পঠিয়াওক — আপোনাৰ উপহাৰ ৰৈ আছে! ✨ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ 🌞"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! {greeting} This {occasion}, share the sunshine: we take care of every new customer — installation, paperwork, subsidy process and after-care — and we have installed solar across 13 sub-divisions. Bring a friend and earn a gift for every friend you bring! 🎁 Your refer code: {referCode} — share it with your friends and earn a gift for each one! Your rewards page: {link} Know someone who wants solar? Send them to us — your gift is waiting! ✨ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপুনি আমাৰ পৰা ছোলাৰ লগোৱা {months} হ'ল — আপোনাৰ বিশ্বাসৰ বাবে ধন্যবাদ! {greeting} এই {occasion}ত ৰ'দৰ পোহৰ বিলাওক: আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — লগোৱা, কাগজপত্ৰ, চাবচিডিৰ কাম আৰু পিছৰ যত্ন — আৰু আমি ১৩টা মহকুমাত ছোলাৰ লগাইছোঁ। বন্ধুক আনিলে প্ৰতিজনৰ বাবে উপহাৰ পাব! 🎁 আপোনাৰ ৰেফাৰ ক'ড: {referCode} — বন্ধুসকলৰ লগত শ্বেয়াৰ কৰক, প্ৰতিজনৰ বাবে উপহাৰ পাব! আপোনাৰ উপহাৰ ইয়াত চাওক: {link} চিনাকি কোনোবাই ছোলাৰ লগাব বিচাৰিছে নেকি? আমাৰ ওচৰলৈ পঠিয়াওক — আপোনাৰ উপহাৰ ৰৈ আছে! ✨ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ 🌞"
   },
   referral: {
-    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉 Wonderful news — because of you, another home is shining with solar! You have brought {count} friend(s) to us so far. 🌞 Bring one more friend and your next gift is yours! 🎁 We take care of every new customer — and we have installed solar across 13 sub-divisions. Our own office in Kalpanagar is always open for you. Check your rewards here: {link} See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy) ✨",
-    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ বাবে আন এখন ঘৰতো ছোলাৰ জিলিকিছে! আপুনি এতিয়ালৈকে {count} জন বন্ধুক আমাৰ ওচৰলৈ আনিছে। 🌞 আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব! 🎁 আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — আৰু আমি ১৩টা মহকুমাত ছোলাৰ লগাইছোঁ। কল্পনানগৰত আমাৰ নিজৰ কাৰ্যালয় আপোনাৰ বাবে সদায় খোলা। আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy) ✨"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉 Wonderful news — because of you, another home is shining with solar! You have brought {count} friend(s) to us so far. 🌞 Bring one more friend and your next gift is yours! 🎁 Your refer code: {referCode} — share it with your friends and earn a gift for each one! We take care of every new customer — and we have installed solar across 13 sub-divisions. Our own office in Kalpanagar is always open for you. Check your rewards here: {link} See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy) ✨",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ বাবে আন এখন ঘৰতো ছোলাৰ জিলিকিছে! আপুনি এতিয়ালৈকে {count} জন বন্ধুক আমাৰ ওচৰলৈ আনিছে। 🌞 আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব! 🎁 আপোনাৰ ৰেফাৰ ক'ড: {referCode} — বন্ধুসকলৰ লগত শ্বেয়াৰ কৰক, প্ৰতিজনৰ বাবে উপহাৰ পাব! আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — আৰু আমি ১৩টা মহকুমাত ছোলাৰ লগাইছোঁ। কল্পনানগৰত আমাৰ নিজৰ কাৰ্যালয় আপোনাৰ বাবে সদায় খোলা। আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy) ✨"
   },
   anniversary: {
-    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉☀️ Happy 1-year solar anniversary! A full year since we installed solar at your home — your electricity bill must be smiling by now. 😊 Need a panel cleaning or a free check-up? Just message us anytime! And if a friend wants solar, we take care of every new customer — installation, paperwork, subsidy process and after-care — plus a gift for you! 🎁 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
-    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉☀️ ছোলাৰৰ ১ বছৰ সম্পূৰ্ণ হোৱাৰ শুভেচ্ছা! আপোনাৰ ঘৰত ছোলাৰ লগোৱা এবছৰ হ'ল — বিদ্যুৎ বিল নিশ্চয় কমিছে। 😊 পেনেল চাফা বা বিনামূলীয়া পৰীক্ষা লাগিলে আমাক মেছেজ কৰক! আৰু কোনো বন্ধুৱে ছোলাৰ লগাব বিচাৰিলে আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — লগোৱা, কাগজপত্ৰ, চাবচিডিৰ কাম আৰু পিছৰ যত্ন — আৰু আপোনাৰ বাবেও উপহাৰ আছে! 🎁 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉☀️ Happy 1-year solar anniversary! A full year since we installed solar at your home — your electricity bill must be smiling by now. 😊 Need a panel cleaning or a free check-up? Just message us anytime! And if a friend wants solar, we take care of every new customer — installation, paperwork, subsidy process and after-care — plus a gift for you! 🎁 Your refer code: {referCode} — share it with your friends and earn a gift for each one! Your rewards page: {link} See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉☀️ ছোলাৰৰ ১ বছৰ সম্পূৰ্ণ হোৱাৰ শুভেচ্ছা! আপোনাৰ ঘৰত ছোলাৰ লগোৱা এবছৰ হ'ল — বিদ্যুৎ বিল নিশ্চয় কমিছে। 😊 পেনেল চাফা বা বিনামূলীয়া পৰীক্ষা লাগিলে আমাক মেছেজ কৰক! আৰু কোনো বন্ধুৱে ছোলাৰ লগাব বিচাৰিলে আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — লগোৱা, কাগজপত্ৰ, চাবচিডিৰ কাম আৰু পিছৰ যত্ন — আৰু আপোনাৰ বাবেও উপহাৰ আছে! 🎁 আপোনাৰ ৰেফাৰ ক'ড: {referCode} — বন্ধুসকলৰ লগত শ্বেয়াৰ কৰক, প্ৰতিজনৰ বাবে উপহাৰ পাব! আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_not_redeemed: {
     en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ⏰ Your {kw} kW solar is installed — but your subsidy is still waiting to be redeemed! 💰 Don't miss it: open the PM Surya Ghar portal and redeem your subsidy today, or just message us and we will help you do it. ✅ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
@@ -167,16 +171,16 @@ var DEFAULT_TEMPLATES = {
    Regular <-> Funny per message. */
 var FUNNY_TEMPLATES = {
   "anniversary": {
-    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, আপোনাৰ ছলাৰ লগোৱা {months} মাহ হ'ল! আপোনাৰ বিজুলী মিটাৰখনে নিশ্চয় আজিকালি হাই-ভল্টেজ বিলৰ নাটকত ভাগ ল'বলৈ পোৱা নাই! আজি পেনেলে চাফা কৰিম আহিম। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
-    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nHappy {months}-month Solarversary, {name}! Your meter is probably missing the drama of high bills. Time for a free check-up/cleaning! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, আপোনাৰ ছলাৰ লগোৱা {months} মাহ হ'ল! আপোনাৰ বিজুলী মিটাৰখনে নিশ্চয় আজিকালি হাই-ভল্টেজ বিলৰ নাটকত ভাগ ল'বলৈ পোৱা নাই! আজি পেনেলে চাফা কৰিম আহিম। আপোনাৰ ৰেফাৰ ক'ড: {referCode} — শ্বেয়াৰ কৰক, প্ৰতিজন বন্ধুৰ বাবে উপহাৰ পাব! আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nHappy {months}-month Solarversary, {name}! Your meter is probably missing the drama of high bills. Time for a free check-up/cleaning! Your refer code: {referCode} — share it and earn a gift for every friend! Your rewards page: {link} See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   },
   "festival": {
-    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\nঐ {name}, {occasion} আহি পালে! কিন্তু বিজুলীৰ বিলখন দেখি মনটো বেয়া নকৰিব। সূৰ্যৰ পৰা ফ্ৰী বিজুলী লওক! বন্ধু এজনক ৰেফাৰ কৰক আৰু উপহাৰ পাব। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
-    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nHey {name}! {occasion} is here, but don't let your electricity bill spoil the mood. Let the sun pay for your lights! Refer a friend and get a surprise gift. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\nঐ {name}, {occasion} আহি পালে! কিন্তু বিজুলীৰ বিলখন দেখি মনটো বেয়া নকৰিব। সূৰ্যৰ পৰা ফ্ৰী বিজুলী লওক! বন্ধু এজনক ৰেফাৰ কৰক আৰু উপহাৰ পাব। আপোনাৰ ৰেফাৰ ক'ড: {referCode} — শ্বেয়াৰ কৰক, প্ৰতিজন বন্ধুৰ বাবে উপহাৰ পাব! আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nHey {name}! {occasion} is here, but don't let your electricity bill spoil the mood. Let the sun pay for your lights! Refer a friend and get a surprise gift. Your refer code: {referCode} — share it and earn a gift for every friend! Your rewards page: {link} See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   },
   "referral": {
-    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\nধন্যবাদ {name}! আপুনি ইতিমধ্যে {count} জন বন্ধুৰ নাম দিছে। এনেকৈয়ে আগুৱাই যাওক আৰু পৰৱৰ্তী পুৰস্কাৰটো লৈ লওক! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
-    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nThanks {name}! You've already referred {count} friends. Keep it up and grab the next big reward! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\nধন্যবাদ {name}! আপুনি ইতিমধ্যে {count} জন বন্ধুৰ নাম দিছে। এনেকৈয়ে আগুৱাই যাওক আৰু পৰৱৰ্তী পুৰস্কাৰটো লৈ লওক! আপোনাৰ ৰেফাৰ ক'ড: {referCode} — শ্বেয়াৰ কৰক, প্ৰতিজন বন্ধুৰ বাবে উপহাৰ পাব! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nThanks {name}! You've already referred {count} friends. Keep it up and grab the next big reward! Your refer code: {referCode} — share it and earn a gift for every friend! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   },
   "reminder_agreement": {
     "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, কেৱল এগ্ৰিমেণ্টখনৰ ফটো এখন লাগে। পঠিয়াই দিয়ক, যাতে আমি আপোনাৰ টকা বচাব পৰা কামটো আৰম্ভ কৰিব পাৰো! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
@@ -203,6 +207,17 @@ var FUNNY_TEMPLATES = {
     "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nOops! {name}, the office sent your file back for a tiny correction. Don't worry, just send the document and we'll fix it! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   }
 };
+/* Drop stored template keys that no longer exist in the current defaults
+   (e.g. "puja" after v4). The vendor cannot create new keys — the
+   Settings editor only edits the keys in TEMPLATE_NAMES — so an unknown
+   stored key is always stale, never a deliberate edit. Known keys keep
+   the vendor's stored wording. */
+function pruneStoredTemplates(t, f) {
+  var out = {}, fout = {};
+  Object.keys(DEFAULT_TEMPLATES).forEach(function (k) { if (t && t[k]) out[k] = t[k]; });
+  Object.keys(FUNNY_TEMPLATES).forEach(function (k) { if (f && f[k]) fout[k] = f[k]; });
+  return { templates: out, funnyTemplates: fout };
+}
 var REMINDER_BY_STAGE = {
   'Subsidy Request (Not Redeemed)': 'reminder_not_redeemed',
   'Subsidy Request (Return)': 'reminder_return',
@@ -261,6 +276,8 @@ var store = {
 /* ---- in-memory working state ---- */
 var meta = store.load(LS_KEY) || defaultMeta();
 var customers = [];          // current list (sample preview OR Firestore)
+var referrals = [];          // referral submissions (vendor only; sample preview: none)
+var referralsLoadError = false; // true when the vendor list could not be read (e.g. rules not published yet)
 var mode = 'sample';         // 'sample' | 'firestore'
 var authed = false;
 var firebaseReady = false;
@@ -399,7 +416,14 @@ function referCodeTaken() {
 /* One entry of a referrer's stored referred-list: first name + consumer
    no. ONLY — never a mobile. The public reward page can only read a
    single doc, so it reads this list instead of querying all customers. */
-function referredEntry(c) { return { name: firstName(c.name), consumerNo: c.consumerNo }; }
+/* A friend on a referrer's stored list. `stage` is the referral
+   journey state the customer reward page can read (the public page can
+   only read its own customer doc, never the referrals collection):
+   signedUp (friend is a customer) -> solar (vendor confirmed the
+   friend got solar) -> rewarded (the tier reward was given). Entries
+   written before stages existed read as signedUp. */
+function referredEntry(c, stage) { return { name: firstName(c.name), consumerNo: c.consumerNo, stage: stage || 'signedUp' }; }
+function referredStage(x) { return (x && x.stage) || 'signedUp'; }
 /* Keep each referrer's stored referred-list in sync after a customer's
    referredBy changes (old referrer loses the entry, new one gains it). */
 function syncReferrerLists(c, oldReferredBy) {
@@ -412,10 +436,154 @@ function syncReferrerLists(c, oldReferredBy) {
   }
   if (newRef && newRef.id !== c.id) {
     var list = (newRef.referred || []).slice();
-    if (!list.some(function (x) { return x.consumerNo === c.consumerNo; })) list.push(referredEntry(c));
+    if (!list.some(function (x) { return x.consumerNo === c.consumerNo; })) list.push(referredEntry(c, stageForNewEntry(newRef, c)));
     newRef.referred = list;
     jobs.push(activeDB.saveCustomer(newRef));
   }
+  return Promise.all(jobs);
+}
+/* Stage for a friend being added to a referrer's list: if the vendor
+   already confirmed that friend's referral (the friend got solar), the
+   entry starts at "solar" instead of "signed up". Needs the referrals
+   list loaded; before it loads this safely returns "signed up". */
+function stageForNewEntry(referrer, c) {
+  if (!referrer || !referrals || !referrals.length) return 'signedUp';
+  var confirmed = referrals.some(function (r) {
+    return r.status === 'confirmed' && String(r.referCode || '').toUpperCase() === String(referrer.referCode || '').toUpperCase() && normMobileDigits(r.referredMobile) === normMobileDigits(c.mobile);
+  });
+  return confirmed ? 'solar' : 'signedUp';
+}
+
+/* ---- referral submissions (public form -> referrals collection) ---- */
+/* Mobile normalisation, kept in sync with refer-form.js (the public
+   form uses the same rule): strip non-digits, drop a leading 91. */
+function normMobileDigits(s) {
+  var d = String(s || '').replace(/\D/g, '');
+  if (d.length === 12 && d.indexOf('91') === 0) d = d.slice(2);
+  return d;
+}
+/* Link a referral submission to the people it involves: the referrer
+   (by refer code) and the referred friend (by mobile, if they are a
+   customer yet). Returns { referrer, referred } with nulls when not found. */
+function findReferralLink(ref, list) {
+  list = list || customers || [];
+  var referrer = ref.referCode ? customerByReferCode(ref.referCode, list) : null;
+  var rm = normMobileDigits(ref.referredMobile);
+  var referred = rm ? list.find(function (x) { return normMobileDigits(x.mobile) === rm; }) : null;
+  return { referrer: referrer || null, referred: referred || null };
+}
+/* Referral journey: 1 Invited -> 2 Friend signed up -> 3 Friend got
+   solar -> 4 Reward earned. The reward is earned only at the confirmed
+   stage. `confirmedIndex` is this referral's 1-based position among
+   the referrer's confirmed referrals, oldest first (0 when not
+   confirmed); the k-th confirmed referral unlocked tier min(3, k), and
+   its reward counts as earned once the referrer has been given at
+   least that many rewards. Returns { done, linked, referrer, referred }. */
+function journeyForReferral(ref, list, referrer, confirmedIndex) {
+  var link = findReferralLink(ref, list);
+  var done = 1;
+  if (link.referred) done = 2;
+  if (ref.status === 'confirmed') done = 3;
+  if (ref.status === 'confirmed' && confirmedIndex > 0) {
+    var unlocked = Math.min(3, confirmedIndex);
+    var given = (referrer && referrer.rewards ? referrer.rewards.length : 0);
+    if (given >= unlocked) done = 4;
+  }
+  return { done: done, linked: !!link.referred, referrer: link.referrer, referred: link.referred };
+}
+/* The four journey steps as a strip: done steps green, the next step
+   outlined. Used by the vendor referral list and the reward page. */
+function journeyStepsHTML(done) {
+  var labels = ['Invited', 'Signed up', 'Got solar', 'Reward earned'];
+  return '<div class="steps">' + labels.map(function (l, i) {
+    var n = i + 1;
+    return '<div class="step' + (n <= done ? ' done' : n === done + 1 ? ' now' : '') + '">' + (n <= done ? '✓ ' : '') + l + '</div>';
+  }).join('') + '</div>';
+}
+/* Link to the public referral form with this customer's code prefilled
+   — this is the link friends open to submit their details. */
+function referralFormLink(code) {
+  if (typeof location !== 'undefined' && location.href) {
+    var base = location.href.split('?')[0].split('#')[0].replace(/index\.html$/, '');
+    if (base.slice(-1) !== '/') base += '/';
+    return base + 'refer.html?ref=' + encodeURIComponent(code || '');
+  }
+  return 'refer.html?ref=' + encodeURIComponent(code || '');
+}
+/* The message a customer shares with a friend: their code, the offer
+   poster, and — for WhatsApp — the referral form link (the friend
+   opens it, the code is prefilled, they submit their details). The
+   native share sheet gets the form link as the shared URL instead, so
+   it is not duplicated in the text. No subsidy figure, no APDCL, no
+   install total — advertising rules. */
+function referralShareText(code, first, includeFormLink) {
+  var msg = 'Hi! I\'m ' + first + ' — I got rooftop solar from SH Enterprise (Green Energy), Kalpanagar, Goalpara, and they take great care of their customers. Use my refer code ' + code + ' when you contact them and you\'ll get a special discount as a friend of mine. See the offer: ' + POSTER_SHORT_URL;
+  if (includeFormLink) msg += ' Send your details here: ' + referralFormLink(code);
+  return msg;
+}
+/* How far a customer is along the referral journey, from what the
+   public page can read (their own doc only): the furthest stage any
+   friend they brought has reached. 0 = nothing yet. */
+function publicJourneyDone(c) {
+  var done = 0;
+  (c.referred || []).forEach(function (x) {
+    var st = referredStage(x);
+    var idx = st === 'rewarded' ? 4 : st === 'solar' ? 3 : 2;
+    if (idx > done) done = idx;
+  });
+  return done;
+}
+/* The referrer's confirmed referrals, oldest first — used to work out
+   which tier each confirmation unlocked. */
+function confirmedReferralsFor(code, list) {
+  if (!code) return [];
+  return (list || referrals || []).filter(function (r) {
+    return String(r.referCode || '').toUpperCase() === String(code).toUpperCase() && r.status === 'confirmed';
+  }).sort(function (a, b) { return String(a.confirmedAt || a.submittedAt || '').localeCompare(String(b.confirmedAt || b.submittedAt || '')); });
+}
+/* What confirming a referral does (pure part, tested in Node): mark it
+   confirmed, and if the referred friend is already a customer with no
+   referrer yet, link them to the referrer — which is what credits the
+   referrer's referral count (the count is computed live from customers'
+   referredBy). Returns { referral, customerToSave }. The caller saves
+   both, syncs the referrer lists and refreshes. */
+function applyReferralConfirm(r, list) {
+  var link = findReferralLink(r, list);
+  r.status = 'confirmed';
+  r.confirmedAt = new Date().toISOString();
+  var toSave = null;
+  if (link.referred) {
+    r.referredCustomerId = link.referred.id;
+    if (link.referrer && !link.referred.referredBy) {
+      link.referred.referredBy = link.referrer.id;
+      toSave = link.referred;
+    }
+  }
+  return { referral: r, customerToSave: toSave };
+}
+/* Heal stored journey stages after the referrals load (runs once per
+   login, only writes when a stage is actually stale): a friend whose
+   referral is confirmed reads "solar" on the referrer's list, and
+   "rewarded" once the tier reward for that confirmation was given. */
+function healReferralStages() {
+  if (activeDB.mode !== 'firestore' || !referrals || !referrals.length) return Promise.resolve();
+  var jobs = [];
+  customers.forEach(function (ref) {
+    var changed = false;
+    (ref.referred || []).forEach(function (entry) {
+      var friend = customers.find(function (x) { return x.consumerNo === entry.consumerNo; });
+      if (!friend) return;
+      var rel = referrals.find(function (r) {
+        return r.status === 'confirmed' && String(r.referCode || '').toUpperCase() === String(ref.referCode || '').toUpperCase() && normMobileDigits(r.referredMobile) === normMobileDigits(friend.mobile);
+      });
+      if (!rel) return;
+      var idx = confirmedReferralsFor(ref.referCode, referrals).findIndex(function (x) { return x.id === rel.id; }) + 1;
+      var j = journeyForReferral(rel, customers, ref, idx);
+      var want = j.done >= 4 ? 'rewarded' : 'solar';
+      if (referredStage(entry) !== want && referredStage(entry) !== 'rewarded') { entry.stage = want; changed = true; }
+    });
+    if (changed) jobs.push(activeDB.saveCustomer(ref));
+  });
   return Promise.all(jobs);
 }
 /* Rebuild every referrer's stored referred-list from the loaded list
@@ -426,7 +594,14 @@ function ensureReferrerLists(list) {
   if (referrerListsEnsured) return Promise.resolve(list);
   referrerListsEnsured = true;
   var byRef = {};
-  list.forEach(function (x) { if (x.referredBy) { (byRef[x.referredBy] = byRef[x.referredBy] || []).push(referredEntry(x)); } });
+  list.forEach(function (x) {
+    if (!x.referredBy) return;
+    /* Preserve a stored journey stage when rebuilding a list — the
+       rebuild must not wipe a friend back to "signed up". */
+    var referrer = list.find(function (r) { return r.id === x.referredBy; });
+    var oldEntry = referrer ? (referrer.referred || []).find(function (e) { return e.consumerNo === x.consumerNo; }) : null;
+    (byRef[x.referredBy] = byRef[x.referredBy] || []).push(referredEntry(x, oldEntry && oldEntry.stage));
+  });
   var stale = list.filter(function (x) {
     return JSON.stringify(x.referred || []) !== JSON.stringify(byRef[x.id] || []);
   });
@@ -527,6 +702,20 @@ function rewardLink(c) {
 function fillTemplate(text, c, lang) {
   var baseDate = c.installDate || c.submittedOn;
   var m = monthsBetween(baseDate);
+  /* The refer code must never render empty: the message IS the customer
+     sharing it. The login backfill normally gives every customer a code,
+     but a message can be built before it runs — so generate one here the
+     same way (unique against the loaded list) and save it back in the
+     background so the next message shows the same code. Demo/sample ids
+     are skipped: they never reach Firestore. */
+  var refCode = c.referCode;
+  if (!refCode) {
+    refCode = makeReferCode(referCodeTaken());
+    c.referCode = refCode;
+    if (c.id && c.id.indexOf('demo-') !== 0 && c.id.indexOf('smp-') !== 0 && typeof activeDB !== 'undefined' && activeDB && activeDB.saveCustomer) {
+      try { activeDB.saveCustomer(c); } catch (e) {}
+    }
+  }
   return text
     .replace(/\{name\}/g, firstName(c.name))
     .replace(/\{months\}/g, monthsText(m, lang))
@@ -535,7 +724,8 @@ function fillTemplate(text, c, lang) {
     .replace(/\{link\}/g, rewardLink(c))
     .replace(/\{poster\}/g, (meta.settings && meta.settings.posterUrl) || DEFAULT_SETTINGS.posterUrl)
     .replace(/\{occasion\}/g, occasionName(lang))
-    .replace(/\{greeting\}/g, occasionGreeting(lang));
+    .replace(/\{greeting\}/g, occasionGreeting(lang))
+    .replace(/\{referCode\}/g, refCode);
 }
 function buildMessage(key, c, style) {
   var t = (style === 'funny')
@@ -806,6 +996,9 @@ var SampleDB = {
     store.save(SAMPLE_LS_KEY, list);
     return Promise.resolve(c);
   },
+  /* Referral submissions: the sample preview has none. */
+  listReferrals: function () { return Promise.resolve([]); },
+  saveReferral: function (r) { return Promise.resolve(r); },
   importRows: function (parsed) {
     var list = store.load(SAMPLE_LS_KEY) || demoCustomers();
     var byConsumer = {};
@@ -842,11 +1035,13 @@ var SampleDB = {
     if (!stored) return Promise.resolve(defaultMeta());
     var storedVersion = stored.templatesVersion || 0;
     if (storedVersion < TEMPLATES_VERSION) {
-      /* Templates were rewritten in v4 (Puja offer is now the Festival
-         offer with an occasion picker; the poster link is the short
-         link). Stored old templates would override the new defaults —
-         replace them and save the upgrade back so the next load
-         already has v4. */
+      /* Templates were rewritten in v5 (festival/referral/anniversary
+         messages now print the customer's refer code and reward link).
+         Stored old templates would override the new defaults —
+         replace them wholesale and save the upgrade back so the next
+         load already has v5. The replace must be wholesale, not a
+         merge: a merge would keep stale keys (e.g. the old "puja"
+         key) inside the stored template maps. */
       var upgradedSettings = Object.assign({}, DEFAULT_SETTINGS, stored.settings || {});
       if (upgradedSettings.offerTitle === OLD_OFFER_TITLE) upgradedSettings.offerTitle = DEFAULT_SETTINGS.offerTitle;
       if (upgradedSettings.offerText === OLD_OFFER_TEXT || upgradedSettings.offerText === OLD_OFFER_TEXT_V3) upgradedSettings.offerText = DEFAULT_SETTINGS.offerText;
@@ -863,8 +1058,9 @@ var SampleDB = {
       return Promise.resolve(upgraded);
     }
     stored.settings = Object.assign({}, DEFAULT_SETTINGS, stored.settings || {});
-    stored.templates = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), stored.templates || {});
-    stored.funnyTemplates = Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), stored.funnyTemplates || {});
+    var pruned = pruneStoredTemplates(stored.templates, stored.funnyTemplates);
+    stored.templates = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), pruned.templates);
+    stored.funnyTemplates = Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), pruned.funnyTemplates);
     /* The model is locked and the poster link is the short link — force
        any stored value that still differs, and save back once. */
     var needsSave = false;
@@ -896,6 +1092,27 @@ var FirestoreDB = {
     if (!c.id || c.id.indexOf('demo-') === 0 || c.id.indexOf('smp-') === 0) { c.id = newCode(); c.code = c.id; }
     if (!c.referCode) c.referCode = makeReferCode(referCodeTaken());
     return db.collection('customers').doc(c.id).set(toFirestore(c), { merge: true }).then(function () { return c; });
+  },
+  /* Referral submissions: newest first. The vendor list reads them;
+     the public form only ever writes (rules: public create, vendor read). */
+  listReferrals: function () {
+    return db.collection('referrals').get().then(function (snap) {
+      var list = [];
+      snap.forEach(function (doc) { var d = doc.data(); d.id = doc.id; list.push(d); });
+      list.sort(function (a, b) { return String(b.submittedAt || '').localeCompare(String(a.submittedAt || '')); });
+      return list;
+    });
+  },
+  saveReferral: function (r) {
+    return db.collection('referrals').doc(r.id).set({
+      referrerName: r.referrerName || '', referrerConsumerNo: r.referrerConsumerNo || '',
+      referrerMobile: r.referrerMobile || '', referrerAddress: r.referrerAddress || '',
+      referredName: r.referredName || '', referredMobile: r.referredMobile || '',
+      referredAddress: r.referredAddress || '', referCode: r.referCode || '',
+      status: r.status || 'pending', submittedBy: r.submittedBy || 'referrer',
+      submittedAt: r.submittedAt || '', confirmedAt: r.confirmedAt || '',
+      referredCustomerId: r.referredCustomerId || ''
+    }, { merge: true }).then(function () { return r; });
   },
   importRows: function (parsed) {
     var self = this;
@@ -986,12 +1203,18 @@ var FirestoreDB = {
       settings.occasions = normalizeOccasions(settings.occasions);
       var storedVersion = d.templatesVersion || 0;
       if (storedVersion < TEMPLATES_VERSION) {
-        /* Templates were rewritten in v4 (Puja offer is now the Festival
-           offer with an occasion picker; the poster link is the short
-           link). The stored doc still holds the old wording, and it
-           overrides the new defaults — replace it and save the upgrade
-           back so the next login already has v4. No human has edited
-           templates yet, so nothing deliberate is lost. */
+        /* Templates were rewritten in v5 (festival/referral/anniversary
+           messages now print the customer's refer code and reward link).
+           The stored doc still holds the old wording, and it overrides
+           the new defaults — replace it and save the upgrade back so
+           the next login already has v5. The write below is a FULL set,
+           NOT a merge: Firestore merge merges map keys, so the v4
+           upgrade's merged write kept the old "puja" key alive inside
+           the stored templates map (the banner upgraded, the templates
+           did not). A full set replaces the doc, so stale keys are
+           actually deleted. The doc only holds the four fields this
+           file manages. No human has edited templates yet, so nothing
+           deliberate is lost. */
         if (settings.offerTitle === OLD_OFFER_TITLE) settings.offerTitle = DEFAULT_SETTINGS.offerTitle;
         if (settings.offerText === OLD_OFFER_TEXT || settings.offerText === OLD_OFFER_TEXT_V3) settings.offerText = DEFAULT_SETTINGS.offerText;
         var upgraded = {
@@ -1000,12 +1223,13 @@ var FirestoreDB = {
           funnyTemplates: JSON.parse(JSON.stringify(FUNNY_TEMPLATES)),
           templatesVersion: TEMPLATES_VERSION
         };
-        return db.collection('meta').doc('settings').set(upgraded, { merge: true }).then(function () { return upgraded; });
+        return db.collection('meta').doc('settings').set(upgraded).then(function () { return upgraded; });
       }
+      var pruned = pruneStoredTemplates(d.templates, d.funnyTemplates);
       var result = {
         settings: settings,
-        templates: Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), d.templates || {}),
-        funnyTemplates: Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), d.funnyTemplates || {}),
+        templates: Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), pruned.templates),
+        funnyTemplates: Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), pruned.funnyTemplates),
         templatesVersion: storedVersion
       };
       if (!modelFixed && !posterFixed) return result;
@@ -1013,7 +1237,10 @@ var FirestoreDB = {
     });
   },
   saveMeta: function (m) {
-    return db.collection('meta').doc('settings').set({ settings: m.settings, templates: m.templates, funnyTemplates: m.funnyTemplates || JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), templatesVersion: m.templatesVersion || TEMPLATES_VERSION }, { merge: true });
+    /* Full set, NOT a merge: saveMeta always writes all four fields,
+       and a merge would keep stale template keys (e.g. "puja") alive
+       in the stored maps. The doc only holds these four fields. */
+    return db.collection('meta').doc('settings').set({ settings: m.settings, templates: m.templates, funnyTemplates: m.funnyTemplates || JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), templatesVersion: m.templatesVersion || TEMPLATES_VERSION });
   }
 };
 
@@ -1022,6 +1249,20 @@ function refreshCustomers() {
   return activeDB.listCustomers().then(function (list) {
     customers = list;
     return ensureReferCodes(list).then(ensureReferrerLists);
+  });
+}
+/* Load the vendor's referral submissions. A failure (e.g. the new
+   Firestore rules for `referrals` not published yet) leaves an empty
+   list and sets the flag the Rewards tab shows — it never breaks login. */
+function refreshReferrals() {
+  return activeDB.listReferrals().then(function (list) {
+    referrals = list;
+    referralsLoadError = false;
+    return list;
+  }).catch(function () {
+    referrals = [];
+    referralsLoadError = true;
+    return referrals;
   });
 }
 function refreshMeta() {
@@ -1058,6 +1299,7 @@ if (typeof document !== 'undefined') {
   var msgCustomerId = null;
   var msgSearch = '';
   var msgOnlyDisbursed = false;
+  var refFilter = 'pending'; // Rewards tab: which referral submissions to show
   var quoteState = { name: '', kw: 3, panel: 150000, inverter: 45000, structure: 25000, installation: 15000, other: 5000, gstPct: null, calc: null };
 
   function publicCode() {
@@ -1585,7 +1827,46 @@ if (typeof document !== 'undefined') {
     var t = tierReached(c);
     if (!t) return;
     c.rewards.push({ tier: t, label: meta.settings.tiers[String(t)], date: new Date().toISOString().slice(0, 10), custom: false });
+    /* The reward just given covers the first t confirmed referrals —
+       those friends move to "Reward earned" on the referrer's list. */
+    confirmedReferralsFor(c.referCode, referrals).slice(0, t).forEach(function (rel) {
+      var link = findReferralLink(rel, customers);
+      if (!link.referred) return;
+      var entry = (c.referred || []).find(function (x) { return x.consumerNo === link.referred.consumerNo; });
+      if (entry) entry.stage = 'rewarded';
+    });
     activeDB.saveCustomer(c).then(function () { return refreshCustomers(); }).then(function () { renderCustomer(id); });
+  };
+  /* Confirm a referral submission: the friend got solar. Links the
+     friend to the referrer when possible (that credits the referral
+     count), moves the friend's entry to "got solar", and refreshes. */
+  window.confirmReferral = function (id) {
+    var r = referrals.find(function (x) { return x.id === id; });
+    if (!r || r.status !== 'pending') return;
+    var done = applyReferralConfirm(r, customers);
+    var chain = Promise.resolve();
+    if (done.customerToSave) {
+      chain = chain.then(function () { return activeDB.saveCustomer(done.customerToSave); })
+        .then(function () { return syncReferrerLists(done.customerToSave, null); });
+    }
+    chain = chain.then(function () { return activeDB.saveReferral(r); })
+      .then(function () {
+        var link = findReferralLink(r, customers);
+        if (link.referrer && link.referred) {
+          var entry = (link.referrer.referred || []).find(function (x) { return x.consumerNo === link.referred.consumerNo; });
+          if (entry && referredStage(entry) !== 'rewarded') { entry.stage = 'solar'; return activeDB.saveCustomer(link.referrer); }
+        }
+        return null;
+      })
+      .then(function () { return refreshReferrals(); })
+      .then(function () { return refreshCustomers(); })
+      .then(function () { renderRewards(); });
+  };
+  window.dismissReferral = function (id) {
+    var r = referrals.find(function (x) { return x.id === id; });
+    if (!r || r.status !== 'pending') return;
+    r.status = 'dismissed';
+    activeDB.saveReferral(r).then(function () { return refreshReferrals(); }).then(function () { renderRewards(); });
   };
   window.giveCustomReward = function (id) {
     var c = customerById(id);
@@ -1719,6 +2000,32 @@ if (typeof document !== 'undefined') {
       var refs = referredList(r.id);
       return '<div class="pick-row" style="cursor:pointer" onclick="location.hash=\'#customer-' + r.id + '\'"><div><b>' + esc(r.name) + '</b> · ' + esc(r.consumerNo) + ' · Code <b>' + esc(r.referCode || '—') + '</b><br><span style="color:var(--muted);font-size:12.5px">' + refs.length + ' referral' + (refs.length > 1 ? 's' : '') + ' · ' + (tierReached(r) ? 'Level ' + tierReached(r) + ' — ' + esc(s.tiers[String(tierReached(r))]) : 'No tier yet') + '<br>Brought: ' + (refs.length ? refs.map(function (x) { return esc(firstName(x.name)) + ' (' + esc(x.consumerNo) + ')'; }).join(', ') : '—') + '</span></div><span style="font-size:22px;color:var(--muted)">›</span></div>';
     }).join('');
+    /* Referral submissions from the public form, with the journey
+       (Invited -> Signed up -> Got solar -> Reward earned) per referral. */
+    var pendingCount = referrals.filter(function (r) { return r.status === 'pending'; }).length;
+    var refList = refFilter === 'all' ? referrals : referrals.filter(function (r) { return r.status === refFilter; });
+    var submissionRows = refList.map(function (r) {
+      var link = findReferralLink(r, customers);
+      var confirmedIdx = r.status === 'confirmed' ? confirmedReferralsFor(r.referCode, referrals).findIndex(function (x) { return x.id === r.id; }) + 1 : 0;
+      var j = journeyForReferral(r, customers, link.referrer, confirmedIdx);
+      var date = (r.submittedAt || '').slice(0, 10);
+      var by = (r.referrerName ? esc(r.referrerName) : (link.referrer ? esc(link.referrer.name) : 'Friend submission')) +
+        (r.referrerConsumerNo ? ' · ' + esc(r.referrerConsumerNo) : '') +
+        (r.referrerMobile ? ' · ' + esc(r.referrerMobile) : '') +
+        (r.referCode ? ' · Code <b>' + esc(r.referCode) + '</b>' : '') +
+        ' <span class="pill ' + (r.status === 'confirmed' ? 'ok' : r.status === 'dismissed' ? 'due' : 'info') + '">' + esc(r.status) + '</span>';
+      var who = '<b>' + esc(r.referredName || '—') + '</b> · ' + esc(r.referredMobile || '') +
+        (r.referredAddress ? '<br><span style="color:var(--muted);font-size:12.5px">' + esc(r.referredAddress) + '</span>' : '');
+      var linkedNote = (j.linked && link.referred)
+        ? '<p class="sub">Friend is a customer: ' + esc(link.referred.name) + ' (' + esc(link.referred.consumerNo) + ')</p>'
+        : (r.status === 'pending' ? '<p class="sub">Friend is not a customer yet — add them with this refer code when they install solar.</p>' : '');
+      var actions = r.status === 'pending'
+        ? '<div class="btnrow remind-btns"><button onclick="confirmReferral(\'' + r.id + '\')">✓ Confirm — friend got solar</button><button class="secondary" onclick="dismissReferral(\'' + r.id + '\')">Dismiss</button></div>'
+        : '';
+      return '<div class="pick-row" style="display:block;cursor:default"><div>' + by + '<br>' + who +
+        '<br><span style="color:var(--muted);font-size:12.5px">' + (date ? fmtDate(date) + ' · ' : '') + (r.submittedBy === 'friend' ? 'Submitted by the friend' : 'Submitted by the referrer') + '</span></div>' +
+        journeyStepsHTML(j.done) + linkedNote + actions + '</div>';
+    }).join('');
     view.innerHTML =
       '<h2>🎁 Rewards</h2><p class="sub">Tiered rewards: 1 referral, 2 referrals, 3 or more. Change the rewards in Settings — the app counts everything for you.</p>' +
       (mode === 'sample' ? sampleBanner() : '') +
@@ -1729,7 +2036,14 @@ if (typeof document !== 'undefined') {
       (rows || '<tr><td colspan="5">No customers yet.</td></tr>') + '</tbody></table></div>' +
       '<div class="card"><h3 style="margin-top:0">Refer tracker — who brought whom</h3>' +
       '<p class="sub">Every customer who referred someone, and who they brought (first name + consumer no. only).</p>' +
-      (refRows || '<p class="sub">No referrals yet.</p>') + '</div>';
+      (refRows || '<p class="sub">No referrals yet.</p>') + '</div>' +
+      '<div class="card"><h3 style="margin-top:0">📩 Referral submissions</h3>' +
+      '<p class="sub">From the public referral form. Confirm only when the referred person actually gets solar — confirming links them to the referrer and counts towards the reward. The reward is earned only at the confirmed stage.</p>' +
+      (referralsLoadError ? '<p class="sub">⚠️ Referral submissions could not be loaded — the Firestore rules for the referrals collection are not published yet. Publish firestore.rules in the Firebase console (Firestore &gt; Rules &gt; Publish), then reload.</p>' : '') +
+      '<div class="row"><select onchange="refFilter=this.value;renderRewards()">' +
+      ['pending', 'confirmed', 'dismissed', 'all'].map(function (f) { return '<option value="' + f + '"' + (refFilter === f ? ' selected' : '') + '>' + f.charAt(0).toUpperCase() + f.slice(1) + (f === 'pending' ? ' (' + pendingCount + ')' : '') + '</option>'; }).join('') +
+      '</select></div>' +
+      (submissionRows || '<p class="sub">No referral submissions ' + (refFilter === 'all' ? 'yet' : 'with this status') + '.</p>') + '</div>';
   }
 
   function renderSettings() {
@@ -1774,7 +2088,7 @@ if (typeof document !== 'undefined') {
       '<label>Gemini API key</label><input id="s-gemini-key" type="password" autocomplete="new-password" value="' + esc(s.geminiApiKey || '') + '" placeholder="Paste your Gemini API key">' +
       '</div>' +
       '<div class="card"><h3 style="margin-top:0">Message templates (English + Assamese in one message)</h3>' +
-      '<p class="sub">Placeholders: {name} first name · {months} months since install · {count} referrals · {kw} system size · {link} reward link · {poster} offer poster link · {occasion} festival name · {greeting} festival greeting. The app fills them in for each customer.</p>' +
+      '<p class="sub">Placeholders: {name} first name · {months} months since install · {count} referrals · {kw} system size · {link} reward link · {poster} offer poster link · {occasion} festival name · {greeting} festival greeting · {referCode} refer code. The app fills them in for each customer.</p>' +
       Object.keys(TEMPLATE_NAMES).map(function (k) {
         return '<label>' + TEMPLATE_NAMES[k] + ' — English</label><textarea id="t-' + k + '-en">' + esc(t[k].en) + '</textarea>' +
           '<label>' + TEMPLATE_NAMES[k] + ' — Assamese</label><textarea id="t-' + k + '-as">' + esc(t[k].as) + '</textarea>';
@@ -1837,9 +2151,59 @@ if (typeof document !== 'undefined') {
      offer, the code and the short poster link. The friend's benefit is
      worded generically ("a special discount") — the vendor sets the
      actual rewards in Settings; no amount is invented here. */
+  /* The share helpers (referralFormLink / referralShareText) live at
+     module scope so Node tests can use them; these are the tap handlers. */
   window.shareReferral = function (code, first) {
-    var msg = 'Hi! I\'m ' + first + ' — I got rooftop solar from SH Enterprise (Green Energy), Kalpanagar, Goalpara, and they take great care of their customers. Use my refer code ' + code + ' when you contact them and you\'ll get a special discount as a friend of mine. See the offer: ' + POSTER_SHORT_URL;
-    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    window.open('https://wa.me/?text=' + encodeURIComponent(referralShareText(code, first, true)), '_blank');
+  };
+  /* Native share sheet where the browser has one (phone share sheet),
+     WhatsApp as the fallback. */
+  window.shareReferralNative = function (code, first) {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: 'SH Enterprise Solar — refer a friend', text: referralShareText(code, first, false), url: referralFormLink(code) }).catch(function () {});
+    } else {
+      window.shareReferral(code, first);
+    }
+  };
+  /* Pick a friend from the phone's contacts (Contact Picker API — Chrome
+     on Android) and open WhatsApp to that friend with the referral
+     message. Where the API is not supported the button is not shown and
+     the share sheet is the way in. */
+  window.pickContactAndShare = function (code, first) {
+    if (!(typeof navigator !== 'undefined' && navigator.contacts && typeof navigator.contacts.select === 'function')) { window.shareReferralNative(code, first); return; }
+    navigator.contacts.select(['name', 'tel'], { multiple: false }).then(function (picked) {
+      var contact = (picked || [])[0];
+      if (!contact) return;
+      var digits = normMobileDigits((contact.tel || [])[0]);
+      if (!/^[6-9]\d{9}$/.test(digits)) {
+        var st = document.getElementById('contact-status');
+        if (st) st.textContent = 'That contact has no mobile number — pick another, or share normally.';
+        return;
+      }
+      window.open('https://wa.me/91' + digits + '?text=' + encodeURIComponent(referralShareText(code, first, true)), '_blank');
+    }).catch(function () {});
+  };
+  /* Notification permission, asked early on the reward page only: the
+     customer taps the button (permissions need a tap — they cannot be
+     requested silently), and only while the permission is undecided.
+     NOTE: asking early prepares the device; actually delivering a push
+     later needs a push backend (e.g. FCM) — that is a follow-up, not
+     part of this page. Until then the app cannot send the notification. */
+  function notifyCardHTML() {
+    if (typeof Notification === 'undefined') return '';
+    if (Notification.permission === 'granted') return '<p class="sub">🔔 Notifications on — we\'ll tell you when a friend signs up, when their solar is confirmed, and when your reward is earned.</p>';
+    if (Notification.permission !== 'default') return '';
+    return '<div class="card notify-card"><h3 style="margin-top:0">🔔 Stay in the loop</h3>' +
+      '<p class="sub">Allow notifications and we\'ll tell you when a friend signs up, when their solar is confirmed, and when your reward is earned.</p>' +
+      '<div class="btnrow"><button onclick="enableNotifications()">Enable notifications</button></div></div>';
+  }
+  window.enableNotifications = function () {
+    if (typeof Notification === 'undefined') return;
+    try {
+      var p = Notification.requestPermission();
+      if (p && p.then) p.then(function () { route(); }).catch(function () {});
+      else route();
+    } catch (e) { /* leave the card as it is */ }
   };
 
   function renderPublic(code) {
@@ -1851,6 +2215,8 @@ if (typeof document !== 'undefined') {
       var rc = referralCount(c.id), t = tierReached(c);
       var s = meta.settings;
       var nextLabel = t >= 3 ? 'You are at the top tier.' : (t === 2 ? '1 more referral for the top reward: ' + s.tiers['3'] : t === 1 ? '1 more referral for: ' + s.tiers['2'] : 'Your first referral earns: ' + s.tiers['1']);
+      var contactsSupported = (typeof navigator !== 'undefined' && navigator.contacts && typeof navigator.contacts.select === 'function');
+      var stageLabel = { signedUp: 'Signed up', solar: 'Got solar', rewarded: 'Reward earned' };
       view.innerHTML =
         '<div class="card" style="max-width:520px;margin:30px auto">' +
         (isSample ? '<p class="sub"><b>SAMPLE PREVIEW</b> — sample customer page.</p>' : '') +
@@ -1861,13 +2227,20 @@ if (typeof document !== 'undefined') {
         '<div class="stat"><div class="num">' + (t ? 'Level ' + t : '—') + '</div><div class="lbl">Reward tier</div></div></div>' +
         '<div class="tier-progress" style="margin-top:14px"><div style="width:' + Math.min(100, rc / 3 * 100) + '%"></div></div>' +
         '<p class="sub">' + rc + ' of 3 referrals towards the top reward. ' + esc(nextLabel) + '</p>' +
-        '<h3>Your refer code</h3>' +
+        '<h3>🎁 Refer &amp; earn — your refer code</h3>' +
         '<p style="font-size:34px;letter-spacing:4px;margin:4px 0"><b>' + esc(c.referCode || '') + '</b></p>' +
-        '<div class="btnrow"><button class="secondary" onclick="copyText(\'' + esc(c.referCode || '') + '\', this)">Copy code</button>' +
-        '<button class="whatsapp" onclick="shareReferral(\'' + esc(c.referCode || '') + '\', \'' + esc(firstName(c.name)).replace(/\'/g, "\\'") + '\')">Share on WhatsApp</button></div>' +
+        '<div class="btnrow big"><button onclick="shareReferralNative(\'' + esc(c.referCode || '') + '\', \'' + esc(firstName(c.name)).replace(/\'/g, "\\'") + '\')">📤 Share</button>' +
+        '<button class="whatsapp" onclick="shareReferral(\'' + esc(c.referCode || '') + '\', \'' + esc(firstName(c.name)).replace(/\'/g, "\\'") + '\')">💬 WhatsApp</button></div>' +
+        (contactsSupported ? '<div class="btnrow" style="margin-top:8px"><button class="secondary" onclick="pickContactAndShare(\'' + esc(c.referCode || '') + '\', \'' + esc(firstName(c.name)).replace(/\'/g, "\\'") + '\')">👥 Pick a friend from contacts</button></div><p class="sub" id="contact-status"></p>' : '') +
+        '<div class="btnrow" style="margin-top:8px"><button class="secondary" onclick="copyText(\'' + esc(c.referCode || '') + '\', this)">📋 Copy code</button>' +
+        '<button onclick="location.href=\'refer.html?ref=' + encodeURIComponent(c.referCode || '') + '\'">🎁 Refer a friend — send the form</button></div>' +
         '<p class="sub">Give this code to a friend — when they install solar with us and mention your code, your friend gets a special discount, and you earn a reward. We take care of every new customer: installation, paperwork, subsidy process and after-care.</p>' +
+        notifyCardHTML() +
+        '<h3>How referring works</h3>' +
+        journeyStepsHTML(publicJourneyDone(c)) +
+        '<p class="sub">Your reward is earned only when your friend\'s solar is installed and we confirm it.</p>' +
         '<h3>Friends you brought</h3>' +
-        ((c.referred || []).length ? '<p>' + (c.referred || []).map(function (x) { return '✓ ' + esc(x.name) + ' (' + esc(x.consumerNo) + ')'; }).join('<br>') + '</p>' : '<p class="sub">Nobody yet — share your code above to start.</p>') +
+        ((c.referred || []).length ? '<p>' + (c.referred || []).map(function (x) { return '✓ ' + esc(x.name) + ' (' + esc(x.consumerNo) + ') — ' + (stageLabel[referredStage(x)] || 'Signed up'); }).join('<br>') + '</p>' : '<p class="sub">Nobody yet — share your code above to start.</p>') +
         '<h3>Rewards you have earned</h3>' +
         ((c.rewards || []).length ? '<p>' + c.rewards.map(function (r) { return '✓ ' + esc(r.label) + ' (' + esc(r.date) + ')'; }).join('<br>') + '</p>' : '<p class="sub">No rewards yet — bring a friend who installs solar and your first reward is yours.</p>') +
         '<p class="sub">Reward tiers: 1 referral → ' + esc(s.tiers['1']) + ' · 2 → ' + esc(s.tiers['2']) + ' · 3+ → ' + esc(s.tiers['3']) + '</p>' +
@@ -1899,7 +2272,7 @@ if (typeof document !== 'undefined') {
           authed = !!user;
           mode = authed ? 'firestore' : 'sample';
           activeDB = authed ? FirestoreDB : SampleDB;
-          refreshMeta().then(refreshCustomers).then(function () { route(); });
+          refreshMeta().then(refreshCustomers).then(refreshReferrals).then(healReferralStages).then(function () { route(); });
         });
         return true;
       }
@@ -1932,6 +2305,11 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     GEMINI_MODEL_ID: GEMINI_MODEL_ID,
     SampleDB: SampleDB,
+    FirestoreDB: FirestoreDB,
+    pruneStoredTemplates: pruneStoredTemplates,
+    buildMessage: buildMessage,
+    /* Test hook (Node tests only): point the Firestore handle at a mock. */
+    _setDb: function (mock) { db = mock; },
     DEFAULT_OCCASIONS: DEFAULT_OCCASIONS,
     OLD_POSTER_URL: OLD_POSTER_URL,
     POSTER_SHORT_URL: POSTER_SHORT_URL,
@@ -1950,9 +2328,20 @@ if (typeof module !== 'undefined' && module.exports) {
     customerByReferCode: customerByReferCode,
     referCodeTaken: referCodeTaken,
     referredEntry: referredEntry,
+    referredStage: referredStage,
     syncReferrerLists: syncReferrerLists,
     ensureReferCodes: ensureReferCodes,
     ensureReferrerLists: ensureReferrerLists,
+    normMobileDigits: normMobileDigits,
+    findReferralLink: findReferralLink,
+    journeyForReferral: journeyForReferral,
+    confirmedReferralsFor: confirmedReferralsFor,
+    applyReferralConfirm: applyReferralConfirm,
+    journeyStepsHTML: journeyStepsHTML,
+    publicJourneyDone: publicJourneyDone,
+    referralFormLink: referralFormLink,
+    referralShareText: referralShareText,
+    healReferralStages: healReferralStages,
     DEFAULT_TEMPLATES: DEFAULT_TEMPLATES,
     FUNNY_TEMPLATES: FUNNY_TEMPLATES,
     DEFAULT_SETTINGS: DEFAULT_SETTINGS,

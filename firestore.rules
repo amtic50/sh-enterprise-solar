@@ -12,6 +12,17 @@ service cloud.firestore {
       allow list, create, update, delete: if request.auth != null;
     }
 
+    // Referral submissions (public refer.html form): anyone can SUBMIT
+    // (no login), but only the vendor login can read, list, update or
+    // delete them — so the submissions stay private to the vendor.
+    // NOTE: rules in this file are NOT live until published in the
+    // Firebase console (Firestore > Rules > Publish). Until then the
+    // form's writes are denied and the vendor list stays empty.
+    match /referrals/{docId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
     // Settings / master data (business details, reward tiers, templates):
     // vendor only.
     match /meta/{docId} {

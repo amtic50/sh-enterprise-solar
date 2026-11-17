@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refer a friend — SH Enterprise Solar</title>
+<meta name="description" content="Refer a friend for rooftop solar with SH Enterprise (Green Energy), Kalpanagar, Goalpara.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <h1>☀️ SH Enterprise <span style="font-weight:400; font-size:14px;">· Green Energy</span></h1>
+  <p>Kalpanagar, near Kalpana Cinema Hall, Goalpara, Assam · PM Surya Ghar Solar</p>
+</header>
+<main id="view">
+  <div class="card" style="max-width:520px;margin:30px auto">
+    <h2 style="margin-top:0">🎁 Refer a friend / বন্ধুক ৰেফাৰ কৰক</h2>
+    <p class="sub">When your friend installs solar with us, you earn a reward. The reward is earned only once your friend's solar is installed and we confirm it.<br>আপোনাৰ বন্ধুৱে আমাৰ পৰা ছোলাৰ লগালে আপুনি উপহাৰ পাব। বন্ধুৰ ছোলাৰ লগোৱা হ'লে আৰু আমি নিশ্চিত কৰিলেহে উপহাৰ পোৱা যায়।</p>
+
+    <div class="btnrow" role="tablist" aria-label="Who is filling this form">
+      <button type="button" id="mode-referrer" onclick="setMode('referrer')">I'm referring a friend<br><span style="font-size:12px;font-weight:400">মই বন্ধুক ৰেফাৰ কৰিছোঁ</span></button>
+      <button type="button" id="mode-friend" class="secondary" onclick="setMode('friend')">I was referred by a friend<br><span style="font-size:12px;font-weight:400">মোক বন্ধুৱে ৰেফাৰ কৰিছে</span></button>
+    </div>
+
+    <form id="refer-form" novalidate>
+      <div id="referrer-section">
+        <h3>Your details / আপোনাৰ বিৱৰণ</h3>
+        <label for="f-referrer-name">Your name / আপোনাৰ নাম</label>
+        <input id="f-referrer-name" autocomplete="name" placeholder="e.g. Ramesh Das">
+        <p class="sub err" id="e-referrer-name"></p>
+
+        <label for="f-referrer-consumer">Consumer number / কনজিউমাৰ নম্বৰ</label>
+        <input id="f-referrer-consumer" inputmode="numeric" autocomplete="off" placeholder="12-digit number on your electricity bill">
+        <p class="sub err" id="e-referrer-consumer"></p>
+
+        <label for="f-referrer-mobile">Mobile number / ম'বাইল নম্বৰ</label>
+        <input id="f-referrer-mobile" type="tel" autocomplete="tel" placeholder="10-digit mobile number">
+        <p class="sub err" id="e-referrer-mobile"></p>
+
+        <label for="f-referrer-address">Address / ঠিকনা</label>
+        <textarea id="f-referrer-address" placeholder="Village / area, Goalpara"></textarea>
+        <p class="sub err" id="e-referrer-address"></p>
+      </div>
+
+      <div id="friend-section">
+        <h3 id="friend-section-title">Your friend's details / আপোনাৰ বন্ধুৰ বিৱৰণ</h3>
+        <label for="f-referred-name">Friend's name / বন্ধুৰ নাম</label>
+        <input id="f-referred-name" autocomplete="off" placeholder="e.g. Anita Rabha">
+        <p class="sub err" id="e-referred-name"></p>
+
+        <label for="f-referred-mobile">Friend's mobile number / বন্ধুৰ ম'বাইল নম্বৰ</label>
+        <input id="f-referred-mobile" type="tel" autocomplete="off" placeholder="10-digit mobile number">
+        <p class="sub err" id="e-referred-mobile"></p>
+
+        <label for="f-referred-address">Friend's address / বন্ধুৰ ঠিকনা</label>
+        <textarea id="f-referred-address" placeholder="Village / area"></textarea>
+        <p class="sub err" id="e-referred-address"></p>
+      </div>
+
+      <div id="friend-mode-note" style="display:none">
+        <h3>Your details / আপোনাৰ বিৱৰণ</h3>
+        <p class="sub">You are the friend who was referred — fill your own details above. Your friend (who gave you the code) earns a reward when your solar is installed.<br>আপুনি ৰেফাৰ কৰা বন্ধু — ওপৰত আপোনাৰ নিজৰ বিৱৰণ দিয়ক। আপোনাৰ ছোলাৰ লগোৱা হ'লে আপোনাক ক'ড দিয়া বন্ধুৱে উপহাৰ পাব।</p>
+        <label for="f-friend-referrer-name">Your friend's name (if you know it) / আপোনাৰ বন্ধুৰ নাম (জনা থাকিলে)</label>
+        <input id="f-friend-referrer-name" autocomplete="off" placeholder="Optional / ঐচ্ছিক">
+      </div>
+
+      <label for="f-refer-code">Refer code / ৰেফাৰ ক'ড <span id="refer-code-req"></span></label>
+      <input id="f-refer-code" autocomplete="off" placeholder="e.g. SH7K2Q" style="text-transform:uppercase">
+      <p class="sub err" id="e-refer-code"></p>
+      <p class="sub">Your refer code is on your rewards page — it links this referral to you.<br>আপোনাৰ ৰেফাৰ ক'ড আপোনাৰ ৰিৱাৰ্ডছ পৃষ্ঠাত আছে — ই এই ৰেফাৰেল আপোনাৰ সৈতে সংযোগ কৰে।</p>
+
+      <div class="btnrow" style="margin-top:16px"><button type="submit" id="submit-btn">Submit referral / ৰেফাৰেল জমা দিয়ক</button></div>
+      <p class="sub err" id="e-submit"></p>
+      <p class="sub">No login needed. We use these details only to contact you and your friend about solar.<br>লগইনৰ প্ৰয়োজন নাই। এই বিৱৰণ কেৱল ছোলাৰৰ বিষয়ে আপোনাৰ আৰু আপোনাৰ বন্ধুৰ সৈতে যোগাযোগ কৰিবলৈহে ব্যৱহাৰ কৰা হ'ব।</p>
+    </form>
+
+    <div id="refer-success" style="display:none">
+      <h3>✅ Thank you! / ধন্যবাদ!</h3>
+      <p id="success-text">We have received your referral. Our team will contact your friend soon.<br>আপোনাৰ ৰেফাৰেল পাইছোঁ। আমাৰ দলে আপোনাৰ বন্ধুক সোনকালে যোগাযোগ কৰিব।</p>
+      <div class="btnrow"><button type="button" onclick="document.getElementById('refer-form').reset();document.getElementById('refer-success').style.display='none';document.getElementById('refer-form').style.display='block';">Refer another friend / আন বন্ধুক ৰেফাৰ কৰক</button></div>
+    </div>
+  </div>
+</main>
+<footer>SH Enterprise (Green Energy) · Real customer data lives in Firebase behind the vendor login — never in this public site.</footer>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="refer-form.js"></script>
+<script>
+(function () {
+  /* Field error messages, EN + AS. Keys match ReferForm error codes. */
+  var ERR_MSGS = {
+    required: 'Required / প্ৰয়োজনীয়',
+    mobile: 'Enter a 10-digit mobile number / 10 অংকৰ ম\'বাইল নম্বৰ দিয়ক',
+    consumerNo: 'Enter the 12-digit consumer number / 12 অংকৰ কনজিউমাৰ নম্বৰ দিয়ক',
+    referCode: 'Refer code looks like SH + 4 characters / ৰেফাৰ ক\'ড SH আৰু 4 টা আখৰৰ হয়'
+  };
+  var FIELD_IDS = {
+    referrerName: ['f-referrer-name', 'e-referrer-name'],
+    referrerConsumerNo: ['f-referrer-consumer', 'e-referrer-consumer'],
+    referrerMobile: ['f-referrer-mobile', 'e-referrer-mobile'],
+    referrerAddress: ['f-referrer-address', 'e-referrer-address'],
+    referredName: ['f-referred-name', 'e-referred-name'],
+    referredMobile: ['f-referred-mobile', 'e-referred-mobile'],
+    referredAddress: ['f-referred-address', 'e-referred-address'],
+    referCode: ['f-refer-code', 'e-refer-code']
+  };
+  var SUBMIT_FAIL = 'Could not submit right now — please try again or contact us directly. / এতিয়া জমা দিব পৰা নগ\'ল — অনুগ্ৰহ কৰি আকৌ চেষ্টা কৰক বা আমাৰ সৈতে পোনপটীয়াকৈ যোগাযোগ কৰক।';
+  var SUCCESS_FRIEND = 'Thank you! We have your details — our team will contact you soon about solar.<br>ধন্যবাদ! আপোনাৰ বিৱৰণ পাইছোঁ — ছোলাৰৰ বিষয়ে আমাৰ দলে আপোনাক সোনকালে যোগাযোগ কৰিব।';
+
+  var mode = 'referrer';
+  var db = null;
+  try {
+    if (window.FIREBASE_CONFIG && typeof firebase !== 'undefined') {
+      if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+      db = firebase.firestore();
+    }
+  } catch (e) { db = null; }
+
+  /* Pre-fill the refer code: ?ref=CODE wins, ?c=CODE also works (the
+     reward page links with ?ref=). A code in the URL means a friend
+     opened the shared link, so friend mode is the default. */
+  var presetCode = '';
+  try {
+    var q = new URLSearchParams(location.search);
+    presetCode = (q.get('ref') || q.get('c') || '').trim().toUpperCase();
+    if (presetCode) document.getElementById('f-refer-code').value = presetCode;
+  } catch (e) {}
+
+  window.setMode = function (m) {
+    mode = m;
+    var isFriend = m === 'friend';
+    document.getElementById('referrer-section').style.display = isFriend ? 'none' : 'block';
+    document.getElementById('friend-mode-note').style.display = isFriend ? 'block' : 'none';
+    document.getElementById('friend-section-title').textContent = isFriend ? 'Your details / আপোনাৰ বিৱৰণ' : 'Your friend\'s details / আপোনাৰ বন্ধুৰ বিৱৰণ';
+    document.getElementById('mode-referrer').className = isFriend ? 'secondary' : '';
+    document.getElementById('mode-friend').className = isFriend ? '' : 'secondary';
+    document.getElementById('refer-code-req').textContent = isFriend ? '(required / প্ৰয়োজনীয়)' : '(if you have one / যদি আছে)';
+    document.getElementById('success-text').innerHTML = isFriend ? SUCCESS_FRIEND :
+      'We have received your referral. Our team will contact your friend soon.<br>আপোনাৰ ৰেফাৰেল পাইছোঁ। আমাৰ দলে আপোনাৰ বন্ধুক সোনকালে যোগাযোগ কৰিব।';
+    showErrors({});
+  };
+  function showErrors(errors) {
+    Object.keys(FIELD_IDS).forEach(function (field) {
+      var el = document.getElementById(FIELD_IDS[field][1]);
+      if (el) el.textContent = errors[field] ? (ERR_MSGS[errors[field]] || errors[field]) : '';
+    });
+  }
+  setMode(presetCode ? 'friend' : 'referrer');
+
+  document.getElementById('refer-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var isFriend = mode === 'friend';
+    var data = {
+      referrerName: isFriend ? document.getElementById('f-friend-referrer-name').value : document.getElementById('f-referrer-name').value,
+      referrerConsumerNo: isFriend ? '' : document.getElementById('f-referrer-consumer').value,
+      referrerMobile: isFriend ? '' : document.getElementById('f-referrer-mobile').value,
+      referrerAddress: isFriend ? '' : document.getElementById('f-referrer-address').value,
+      referredName: document.getElementById('f-referred-name').value,
+      referredMobile: document.getElementById('f-referred-mobile').value,
+      referredAddress: document.getElementById('f-referred-address').value,
+      referCode: document.getElementById('f-refer-code').value
+    };
+    var v = ReferForm.validateReferral(data, mode);
+    showErrors(v.errors);
+    document.getElementById('e-submit').textContent = '';
+    if (!v.ok) return;
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting… / জমা দিয়া হৈছে…';
+    function fail() {
+      document.getElementById('e-submit').textContent = SUBMIT_FAIL;
+      btn.disabled = false;
+      btn.textContent = 'Submit referral / ৰেফাৰেল জমা দিয়ক';
+    }
+    if (!db) { fail(); return; }
+    ReferForm.submitReferral(db, data, null, mode).then(function () {
+      document.getElementById('refer-form').style.display = 'none';
+      document.getElementById('refer-success').style.display = 'block';
+    }).catch(function (err) {
+      console.error('Referral submit failed:', err);
+      fail();
+    });
+  });
+})();
+</script>
+</body>
+</html>
