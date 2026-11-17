@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Customers: the vendor login gates everything EXCEPT a single-document
+    // GET by document id. That one read is the customer reward link
+    // (?c=<code>) — no login for customers, and the link is the only way in.
+    // List queries always need the vendor login, so nobody can enumerate
+    // customers from the public site.
+    match /customers/{docId} {
+      allow get: if true;
+      allow list, create, update, delete: if request.auth != null;
+    }
+
+    // Settings / master data (business details, reward tiers, templates):
+    // vendor only.
+    match /meta/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
