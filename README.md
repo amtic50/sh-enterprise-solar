@@ -40,6 +40,20 @@ aka Green Energy, Kalpanagar, near Kalpana Cinema Hall, Goalpara.
   Settings; reward-due flags; per-customer custom rewards.
 - **Customer reward link** — `?c=<code>` shows that customer's referral
   count, tier progress and rewards earned. No login for customers.
+- **Referrals** — every customer has a refer code (SH + 4 characters)
+  printed in their messages and on their reward page, with a Share on
+  WhatsApp button; a public referral form collects the referrer's consumer
+  number, mobile and address plus the friend's name, mobile and address.
+  The vendor confirms each referral in the app, and the reward is earned
+  only when the friend actually gets solar.
+- **Sent tracking** — every WhatsApp / SMS / Copy tap is recorded per
+  customer, so the vendor can see who a message was already sent to.
+- **Festival messages** — one festival template with an occasion picker
+  (Christmas, New Year, Bihu, Eid, Holi and more); only the occasion
+  changes.
+- **Personalize with AI** — the vendor's own Gemini API key (kept in
+  Settings, never in the repo) rewrites a message in a warmer tone;
+  the model is locked to Gemini 3.5 Flash Lite.
 - **Settings (master data)** — business details, GST %, reward tiers,
   message templates (English + Assamese, plus the six reminder templates).
 - **Import / Export CSV** — import accepts the PM Surya Ghar portal
