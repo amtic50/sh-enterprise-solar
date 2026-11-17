@@ -1,14 +1,13 @@
-// Firebase web app config — filled in by the project owner.
-// This file ships with empty placeholders on purpose: never invent a config.
-// The owner creates the Firebase project, copies the web app config here,
-// and the app logs the vendor in with email + password and reads/writes
-// Cloud Firestore. Firebase web config values are public by design (they
-// identify the project; security comes from Firestore rules + Auth).
+// Firebase web app config for SH Enterprise Solar (project: sh-enterprise-solar).
+// Created 18 Nov 2026 under amitkijaanu@gmail.com, free Spark plan,
+// Firestore asia-south1, Email/Password auth enabled.
+// Firebase web config values are public by design (they identify the project;
+// security comes from Firestore rules + Auth).
 window.FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyAxsCpCBnNHq4ttDxl4Z7LazWkBrjJXKNM",
+  authDomain: "sh-enterprise-solar.firebaseapp.com",
+  projectId: "sh-enterprise-solar",
+  storageBucket: "sh-enterprise-solar.firebasestorage.app",
+  messagingSenderId: "787777386360",
+  appId: "1:787777386360:web:253497b1f6a827de5cba8d"
 };
