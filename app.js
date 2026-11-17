@@ -59,6 +59,36 @@ function subsidyFor(kw) {
   return 78000;
 }
 
+/* The ONLY Gemini model the app uses — locked at Amit's instruction.
+   No model choice, no fallback. */
+var GEMINI_MODEL_ID = 'gemini-3.5-flash-lite';
+
+/* Festival occasions for the "Festival offer" template. Dates verified
+   Nov 2026: Christmas 25 Dec 2026 and New Year 1 Jan 2027 are fixed;
+   Magh Bihu 15 Jan 2027, Saraswati Puja 11 Feb 2027, Holi 22 Mar 2027,
+   Rongali Bihu 15 Apr 2027, Durga Puja 5 Oct 2027 (Shashthi) from the
+   Assamese/panchang calendars; Eid-ul-Fitr 10 Mar 2027 and Eid-ul-Adha
+   17 May 2027 from the Government of India 2027 holiday list — both
+   Eids depend on moon sighting and can shift by a day. The vendor can
+   add occasions in Settings. */
+var DEFAULT_OCCASIONS = [
+  { id: 'christmas', name: 'Christmas', nameAs: 'বৰদিন', date: '2026-12-25', en: 'Merry Christmas! 🎄', as: 'শুভ বৰদিন! 🎄' },
+  { id: 'new-year', name: 'New Year', nameAs: 'নৱবৰ্ষ', date: '2027-01-01', en: 'Happy New Year! 🎆', as: 'শুভ নৱবৰ্ষ! 🎆' },
+  { id: 'magh-bihu', name: 'Magh Bihu', nameAs: 'মাঘ বিহু', date: '2027-01-15', en: 'Happy Magh Bihu! 🔥', as: 'মাঘ বিহুৰ শুভেচ্ছা! 🔥' },
+  { id: 'saraswati-puja', name: 'Saraswati Puja', nameAs: 'সৰস্বতী পূজা', date: '2027-02-11', en: 'Happy Saraswati Puja! 📚', as: 'সৰস্বতী পূজাৰ শুভেচ্ছা! 📚' },
+  { id: 'eid-fitr', name: 'Eid-ul-Fitr', nameAs: 'ঈদ-উল-ফিতৰ', date: '2027-03-10', en: 'Eid Mubarak! 🌙', as: 'ঈদ মোবাৰক! 🌙' },
+  { id: 'holi', name: 'Holi', nameAs: 'হোলী', date: '2027-03-22', en: 'Happy Holi! 🎨', as: 'হোলীৰ শুভেচ্ছা! 🎨' },
+  { id: 'rongali-bihu', name: 'Rongali Bihu', nameAs: 'ৰঙালী বিহু', date: '2027-04-15', en: 'Happy Rongali Bihu! 🌾', as: 'ৰঙালী বিহুৰ শুভেচ্ছা! 🌾' },
+  { id: 'eid-adha', name: 'Eid-ul-Adha', nameAs: 'ঈদ-উল-আজহা', date: '2027-05-17', en: 'Eid Mubarak! 🌙', as: 'ঈদ মোবাৰক! 🌙' },
+  { id: 'durga-puja', name: 'Durga Puja', nameAs: 'দুৰ্গা পূজা', date: '2027-10-05', en: 'Happy Durga Puja! 🌺', as: 'দুৰ্গা পূজাৰ শুভেচ্ছা! 🌺' }
+];
+/* The old long poster URL. The v4 upgrade replaces a stored posterUrl
+   still equal to this with the short link, so messages stop exposing
+   the repo URL. Backup short link (do not use unless TinyURL fails):
+   https://is.gd/Q2yefd */
+var OLD_POSTER_URL = 'https://amtic50.github.io/sh-enterprise-solar/offer-poster.jpg';
+var POSTER_SHORT_URL = 'https://tinyurl.com/2875c3rt';
+
 var DEFAULT_SETTINGS = {
   businessName: 'SH Enterprise',
   businessShort: 'Green Energy',
@@ -67,11 +97,12 @@ var DEFAULT_SETTINGS = {
   phone: '',
   gstPct: 13.8,
   offerTitle: '🎉 BUMPER OFFER 🎁',
-  offerText: 'Refer a friend and earn gifts! Plus PM Surya Ghar subsidy up to ₹78,000 on rooftop solar.',
+  offerText: 'Refer a friend and earn gifts! We take care of every new customer — installation, paperwork, subsidy process and after-care. Solar installed across 13 sub-divisions. Visit our own office in Kalpanagar, Goalpara (near Kalpana Cinema Hall).',
   offerValidTill: '',
-  posterUrl: 'https://amtic50.github.io/sh-enterprise-solar/offer-poster.jpg',
+  posterUrl: POSTER_SHORT_URL,
+  occasions: JSON.parse(JSON.stringify(DEFAULT_OCCASIONS)),
   geminiApiKey: '',
-  geminiModel: 'gemini-2.0-flash',
+  geminiModel: GEMINI_MODEL_ID,
   tiers: { '1': 'Free panel cleaning', '2': '₹500 gift', '3': '₹1,500 gift' }
 };
 
@@ -80,25 +111,30 @@ var DEFAULT_SETTINGS = {
    referral-first wording; a vendor's own edits are left alone. */
 var OLD_OFFER_TITLE = '🎉 BUMPER OFFER ☀️';
 var OLD_OFFER_TEXT = 'PM Surya Ghar subsidy up to ₹78,000 on rooftop solar — plus gifts for every friend you refer! 🎁';
+/* The v3 banner text (also subsidy-led). The v4 upgrade replaces stored
+   settings that still equal either old text with the new wording. */
+var OLD_OFFER_TEXT_V3 = 'Refer a friend and earn gifts! Plus PM Surya Ghar subsidy up to ₹78,000 on rooftop solar.';
 
 /* Message templates version. Bump this when DEFAULT_TEMPLATES is rewritten:
    loadMeta replaces stored templates older than this version, because a
    stored meta doc otherwise overrides the new defaults with the old wording.
-   A vendor's own edits are kept only when the stored version is current. */
-var TEMPLATES_VERSION = 3;
+   A vendor's own edits are kept only when the stored version is current.
+   v4: Puja offer -> Festival offer with an occasion picker; poster link
+   is the short link. */
+var TEMPLATES_VERSION = 4;
 
 var DEFAULT_TEMPLATES = {
-  puja: {
-    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! This Puja, share the sunshine: PM Surya Ghar subsidy up to ₹78,000 on rooftop solar, plus a gift for you for every friend you bring! 🎁 Know someone who wants solar? Send them to us — your gift is waiting! ✨ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
-    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপুনি আমাৰ পৰা ছোলাৰ লগোৱা {months} হ'ল — আপোনাৰ বিশ্বাসৰ বাবে ধন্যবাদ! এই পূজাত ৰ'দৰ পোহৰ বিলাওক: PM Surya Ghar চাবচিডিৰে ₹78,000 লৈকে ৰেহাই, আৰু আপুনি অনা প্ৰতিজন বন্ধুৰ বাবে উপহাৰ! 🎁 চিনাকি কোনোবাই ছোলাৰ লগাব বিচাৰিছে নেকি? আমাৰ ওচৰলৈ পঠিয়াওক — আপোনাৰ উপহাৰ ৰৈ আছে! ✨ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ 🌞"
+  festival: {
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! {greeting} This {occasion}, share the sunshine: we take care of every new customer — installation, paperwork, subsidy process and after-care — and we have installed solar across 13 sub-divisions. Bring a friend and earn a gift for every friend you bring! 🎁 Know someone who wants solar? Send them to us — your gift is waiting! ✨ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপুনি আমাৰ পৰা ছোলাৰ লগোৱা {months} হ'ল — আপোনাৰ বিশ্বাসৰ বাবে ধন্যবাদ! {greeting} এই {occasion}ত ৰ'দৰ পোহৰ বিলাওক: আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — লগোৱা, কাগজপত্ৰ, চাবচিডিৰ কাম আৰু পিছৰ যত্ন — আৰু আমি ১৩টা মহকুমাত ছোলাৰ লগাইছোঁ। বন্ধুক আনিলে প্ৰতিজনৰ বাবে উপহাৰ পাব! 🎁 চিনাকি কোনোবাই ছোলাৰ লগাব বিচাৰিছে নেকি? আমাৰ ওচৰলৈ পঠিয়াওক — আপোনাৰ উপহাৰ ৰৈ আছে! ✨ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ 🌞"
   },
   referral: {
-    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉 Wonderful news — because of you, another home is shining with solar! You have brought {count} friend(s) to us so far. 🌞 Bring one more friend and your next gift is yours! 🎁 Check your rewards here: {link} See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy) ✨",
-    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ বাবে আন এখন ঘৰতো ছোলাৰ জিলিকিছে! আপুনি এতিয়ালৈকে {count} জন বন্ধুক আমাৰ ওচৰলৈ আনিছে। 🌞 আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব! 🎁 আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy) ✨"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉 Wonderful news — because of you, another home is shining with solar! You have brought {count} friend(s) to us so far. 🌞 Bring one more friend and your next gift is yours! 🎁 We take care of every new customer — and we have installed solar across 13 sub-divisions. Our own office in Kalpanagar is always open for you. Check your rewards here: {link} See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy) ✨",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ বাবে আন এখন ঘৰতো ছোলাৰ জিলিকিছে! আপুনি এতিয়ালৈকে {count} জন বন্ধুক আমাৰ ওচৰলৈ আনিছে। 🌞 আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব! 🎁 আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — আৰু আমি ১৩টা মহকুমাত ছোলাৰ লগাইছোঁ। কল্পনানগৰত আমাৰ নিজৰ কাৰ্যালয় আপোনাৰ বাবে সদায় খোলা। আপোনাৰ উপহাৰ ইয়াত চাওক: {link} আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy) ✨"
   },
   anniversary: {
-    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉☀️ Happy 1-year solar anniversary! A full year since we installed solar at your home — your electricity bill must be smiling by now. 😊 Need a panel cleaning or a free check-up? Just message us anytime! And if a friend wants solar, PM Surya Ghar subsidy up to ₹78,000 is waiting — plus a gift for you! 🎁 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
-    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉☀️ ছোলাৰৰ ১ বছৰ সম্পূৰ্ণ হোৱাৰ শুভেচ্ছা! আপোনাৰ ঘৰত ছোলাৰ লগোৱা এবছৰ হ'ল — বিদ্যুৎ বিল নিশ্চয় কমিছে। 😊 পেনেল চাফা বা বিনামূলীয়া পৰীক্ষা লাগিলে আমাক মেছেজ কৰক! আৰু কোনো বন্ধুৱে ছোলাৰ লগাব বিচাৰিলে PM Surya Ghar চাবচিডি ₹78,000 লৈকে পাব — আপোনাৰ বাবেও উপহাৰ আছে! 🎁 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 🎉☀️ Happy 1-year solar anniversary! A full year since we installed solar at your home — your electricity bill must be smiling by now. 😊 Need a panel cleaning or a free check-up? Just message us anytime! And if a friend wants solar, we take care of every new customer — installation, paperwork, subsidy process and after-care — plus a gift for you! 🎁 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉☀️ ছোলাৰৰ ১ বছৰ সম্পূৰ্ণ হোৱাৰ শুভেচ্ছা! আপোনাৰ ঘৰত ছোলাৰ লগোৱা এবছৰ হ'ল — বিদ্যুৎ বিল নিশ্চয় কমিছে। 😊 পেনেল চাফা বা বিনামূলীয়া পৰীক্ষা লাগিলে আমাক মেছেজ কৰক! আৰু কোনো বন্ধুৱে ছোলাৰ লগাব বিচাৰিলে আমি প্ৰতিজন নতুন গ্ৰাহকৰ যত্ন লওঁ — লগোৱা, কাগজপত্ৰ, চাবচিডিৰ কাম আৰু পিছৰ যত্ন — আৰু আপোনাৰ বাবেও উপহাৰ আছে! 🎁 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_not_redeemed: {
     en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ⏰ Your {kw} kW solar is installed — but your subsidy is still waiting to be redeemed! 💰 Don't miss it: open the PM Surya Ghar portal and redeem your subsidy today, or just message us and we will help you do it. ✅ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
@@ -109,8 +145,8 @@ var DEFAULT_TEMPLATES = {
     as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 📄 আপোনাৰ চাবচিডি আবেদনখন সৰু ভুল এটাৰ বাবে ঘূৰাই দিয়া হৈছে — চিন্তা কৰিব নালাগে! শুদ্ধ কাগজ বা ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ আকৌ জমা দিম। ✅ এতিয়াই মেছেজ কৰক, চাবচিডিটো সোনকালে পোৱাৰ ব্যৱস্থা কৰোঁ! 💰 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_installation: {
-    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ Your {kw} kW solar is ready to shine at your home — we are just waiting for your date! 📅 Tell us a day that suits you and our team will come and install it. Plus, PM Surya Ghar subsidy up to ₹78,000 is waiting for you after installation! 💰 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
-    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপোনাৰ {kw} kW ছোলাৰ আপোনাৰ ঘৰত জিলিকিবলৈ সাজু — আমি কেৱল আপোনাৰ দিনটোৰ অপেক্ষাত! 📅 সুবিধাৰ দিন এটা জনাওক, আমাৰ দলে আহি লগাই দিব। লগোৱাৰ পিছত PM Surya Ghar চাবচিডি ₹78,000 লৈকে আপোনাৰ বাবে ৰৈ আছে! 💰 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
+    en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! ☀️ Your {kw} kW solar is ready to shine at your home — we are just waiting for your date! 📅 Tell us a day that suits you and our team will come and install it. Plus, we take care of everything for you — installation, paperwork, subsidy process and after-care. Our team has hands-on working experience in electrical and solar work, and our own office in Kalpanagar is always there if you need us! 💰 See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
+    as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! ☀️ আপোনাৰ {kw} kW ছোলাৰ আপোনাৰ ঘৰত জিলিকিবলৈ সাজু — আমি কেৱল আপোনাৰ দিনটোৰ অপেক্ষাত! 📅 সুবিধাৰ দিন এটা জনাওক, আমাৰ দলে আহি লগাই দিব। লগতে, আপোনাৰ বাবে সকলো কামতে আমি সহায় কৰিম — লগোৱা, কাগজপত্ৰ, চাবচিডিৰ কাম আৰু পিছৰ যত্ন। আমাৰ দলৰ বৈদ্যুতিক আৰু ছোলাৰ কামৰ প্ৰত্যক্ষ অভিজ্ঞতা আছে, আৰু কল্পনানগৰত আমাৰ নিজৰ কাৰ্যালয় আছে — প্ৰয়োজন হ'লেই আহিব পাৰে! 💰 আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_agreement: {
     en: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 Namaskar {name}! 📝 Your solar agreement is the last step before installation — just one signature away! ✍️ Please send us a photo of the signed agreement and we will upload it on the portal for you right away. ✅ See our bumper offer poster: {poster} — Saiful, SH Enterprise (Green Energy)",
@@ -125,45 +161,46 @@ var DEFAULT_TEMPLATES = {
     as: "☀️🎉 SH ENTERPRISE • GREEN ENERGY 🎉☀️\n🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ চাবচিডি অনুমোদন হৈছে! 💰 টকা বিভাগৰ পৰা আপোনাৰ বেংক একাউণ্টলৈ আহি আছে। আমি প্ৰতিদিনে তাৰ পিছত লাগি আছোঁ — টকা সোমোৱা মাত্ৰকে আপোনাক জনাম। ✅ আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster} — ছাইফুল, SH Enterprise (Green Energy)"
   }
 };
-/* Funny / meme-style variants of the same 9 templates, written
-   with Gemini and baked in. The Messages tab and the customer
-   page let the vendor swap Regular <-> Funny per message. */
+/* Funny / meme-style variants of the same 9 templates, v2 (funnier),
+   written with Gemini and baked in. The festival one uses {occasion}.
+   The Messages tab and the customer page let the vendor swap
+   Regular <-> Funny per message. */
 var FUNNY_TEMPLATES = {
-  "puja": {
-    "as": "☀️🏮✨🏮☀️\nনমস্কাৰ {name}! আপোনাৰ চাবচিডি পোৱা হ’ল, এতিয়া আনকো পোহৰ বিলাই দিয়ক! এই পূজাৰ বতৰত বন্ধু-বান্ধৱক ৰেফাৰ কৰক আৰু পুৰস্কাৰ লাভ কৰক। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "☀️🏮✨🏮☀️\nHi {name}! As you enjoy your subsidy benefits, spread the light! Refer friends to us this Puja and get rewarded. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  "anniversary": {
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, আপোনাৰ ছলাৰ লগোৱা {months} মাহ হ'ল! আপোনাৰ বিজুলী মিটাৰখনে নিশ্চয় আজিকালি হাই-ভল্টেজ বিলৰ নাটকত ভাগ ল'বলৈ পোৱা নাই! আজি পেনেলে চাফা কৰিম আহিম। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nHappy {months}-month Solarversary, {name}! Your meter is probably missing the drama of high bills. Time for a free check-up/cleaning! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "festival": {
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\nঐ {name}, {occasion} আহি পালে! কিন্তু বিজুলীৰ বিলখন দেখি মনটো বেয়া নকৰিব। সূৰ্যৰ পৰা ফ্ৰী বিজুলী লওক! বন্ধু এজনক ৰেফাৰ কৰক আৰু উপহাৰ পাব। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nHey {name}! {occasion} is here, but don't let your electricity bill spoil the mood. Let the sun pay for your lights! Refer a friend and get a surprise gift. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   },
   "referral": {
-    "as": "🚀⚡💰⚡💰⚡🚀\nনমস্কাৰ {name}! আপোনাৰ ৰেফাৰেলৰ বাবে ধন্যবাদ! এতিয়ালৈকে আপুনি {count} জনক ৰেফাৰ কৰিছে। আগুৱাই যাওক, ডাঙৰ পুৰস্কাৰ পাবলৈ! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "🚀⚡💰⚡🚀\nHey {name}! Thanks for the referral! You have {count} referrals now. Keep it up to unlock your next big reward! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
-  },
-  "anniversary": {
-    "as": "🎂☀️🛠️☀️🎂\nশুভ প্ৰথম বাৰ্ষিকী {name}! {months} মাহৰ বিজুলী বিলৰ বচত কেনেকুৱা চলিছে? পেনেল চাফা আৰু পৰীক্ষা কৰিবলৈ আমি এবাৰ আহোঁ নেকি? আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "🎂☀️🛠️☀️🎂\nHappy 1st Anniversary, {name}! {months} months of savings! How is the solar life? Let us come by for a free panel cleaning and checkup. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
-  },
-  "reminder_not_redeemed": {
-    "as": "⏳💸⚡💸⏳\nনমস্কাৰ {name}! আপোনাৰ চাবচিডিৰ টকা ৰৈ আছে। সোনকালে ক্লেইম কৰক, হেৰুৱাব নালাগে! আজি কিবা সহায় লাগে নেকি? আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "⏳💸⚡💸⏳\nHey {name}! Your subsidy is waiting to be redeemed. Don't leave free money on the table! Let's get it done today. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
-  },
-  "reminder_return": {
-    "as": "📝🔍⚡🔍📝\nনমস্কাৰ {name}! আপোনাৰ চাবচিডিৰ আবেদনত অলপ ভুলৰ বাবে বিভাগে ঘূৰাই পঠাইছে। অনুগ্ৰহ কৰি শুদ্ধ নথিপত্ৰখন দিয়ক, আমি পুনৰ জমা দিম! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "📝🔍⚡🔍📝\nOops {name}! The department returned your subsidy application for a small correction. Please send the updated doc so we can re-submit! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
-  },
-  "reminder_installation": {
-    "as": "🏗️⚡☀️⚡🏗️\nনমস্কাৰ {name}! আপোনাৰ {kw} ছ’লাৰ চিষ্টেমটো বহুৱাবলৈ বাকী আছে। আজি এটা তাৰিখ ঠিক কৰোঁ নেকি? আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "🏗️⚡☀️⚡🏗️\nReady to go green, {name}? Your {kw} system installation is pending. Let's pick a date to power up your roof! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\nধন্যবাদ {name}! আপুনি ইতিমধ্যে {count} জন বন্ধুৰ নাম দিছে। এনেকৈয়ে আগুৱাই যাওক আৰু পৰৱৰ্তী পুৰস্কাৰটো লৈ লওক! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nThanks {name}! You've already referred {count} friends. Keep it up and grab the next big reward! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   },
   "reminder_agreement": {
-    "as": "✍️📄⚡📄✍️\nনমস্কাৰ {name}! প্ৰায় শেষ হৈ আহিছে! অনুগ্ৰহ কৰি স্বাক্ষৰ কৰা এগ্ৰিমেণ্টখনৰ এখন ফটো পঠাওক যাতে আমি আগুৱাব পাৰোঁ। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "✍️📄⚡📄✍️\nHi {name}! We are almost there! Please share a clear photo of your signed agreement so we can proceed. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
-  },
-  "reminder_inspection": {
-    "as": "📋👷⚡👷📋\nনমস্কাৰ {name}! ইনচপেকচন হ’বলৈ আহিছে। অনুগ্ৰহ কৰি প্লেন্টৰ ঠাইখিনি পৰিষ্কাৰ কৰি ৰাখিব আৰু নথিপত্ৰবোৰ সাজু কৰি থ’ব। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "📋👷⚡👷📋\nHey {name}! Inspection is coming up. Please keep the plant area clear and your documents handy. Let's shine! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, কেৱল এগ্ৰিমেণ্টখনৰ ফটো এখন লাগে। পঠিয়াই দিয়ক, যাতে আমি আপোনাৰ টকা বচাব পৰা কামটো আৰম্ভ কৰিব পাৰো! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, just need that agreement photo to make things official. Send it over so we can start saving your money! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   },
   "reminder_disbursal": {
-    "as": "🏦⚡⌛⚡🏦\nখবৰ ভাল {name}! আপোনাৰ চাবচিডি এপ্ৰুভ হৈছে। টকাখিনি পাবলৈ আমি বিভাগৰ লগত যোগাযোগ কৰি আছোঁ, চিন্তা নকৰিব। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— চাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীন এনাৰ্জি)",
-    "en": "🏦⚡⌛⚡🏦\nGreat news {name}! Your subsidy is approved. We are actively following up with the department for the transfer. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, ভাল খবৰ! চাবচিডি এপ্ৰুভ হৈ গৈছে। টকাখিনি সোনকালে পাবলৈ আমি বিভাগীয় বিষয়াৰ লগত কথা পাতি আছোঁ। খবৰ দিম! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, the good news is the subsidy is approved! We are pushing the department for the final money transfer. Stay tuned! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_inspection": {
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, ইনস্পেকচন আহিব ধৰিছে! ছাদখন পৰিষ্কাৰ কৰি ৰাখিব আৰু কাগজ-পত্ৰবোৰ সাজু কৰি থ'ব। সকলো যাতে ধুনীয়াকৈ হয়। আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, inspection is coming! Please keep the rooftop clean and documents handy. Let's make it smooth. See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_installation": {
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, আপোনাৰ ছাদখনে কেতিয়াৰ পৰা {kw}kW ছলাৰ পাৱাৰ পাব? ইনষ্টলেচনৰ বাবে এটা দিন ঠিক কৰক! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, your rooftop is waiting for its {kw}kW sun-power upgrade! When are we coming to install? Pick a date! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_not_redeemed": {
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, আপোনাৰ ছলাৰ ৰেডী, কিন্তু চাবচিডি ফাইলটো টোপনি গৈ আছে। সোনকালে জগাই দিয়ক, নহ'লে সি আৰু এলাহী হৈ পৰিব! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\n{name}, your solar is ready but your subsidy file is hibernating. Wake it up before it gets too lazy! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
+  },
+  "reminder_return": {
+    "as": "☀️✨--- SH ENTERPRISE ---✨☀️\nঐ {name}, অফিচৰ পৰা ফাইলটো অলপ ভুলৰ বাবে ঘূৰাই দিছে। চিন্তা নকৰিব, মাত্ৰ সেই কাগজখন পঠিয়াই দিয়ক, আমি ঠিক কৰি দিম! আমাৰ বাম্পাৰ অফাৰ পষ্টাৰ চাওক: {poster}\n— ছাইফুল, এছ এইচ এণ্টাৰপ্ৰাইজ (গ্ৰীণ এনাৰ্জি)",
+    "en": "☀️✨--- SH ENTERPRISE ---✨☀️\nOops! {name}, the office sent your file back for a tiny correction. Don't worry, just send the document and we'll fix it! See our bumper offer poster: {poster}\n— Saiful, SH Enterprise (Green Energy)"
   }
 };
 var REMINDER_BY_STAGE = {
@@ -175,7 +212,7 @@ var REMINDER_BY_STAGE = {
   'Subsidy Disbursal (Pending)': 'reminder_disbursal'
 };
 var TEMPLATE_NAMES = {
-  puja: 'Puja offer', referral: 'Referral progress', anniversary: 'One-year anniversary',
+  festival: 'Festival offer', referral: 'Referral progress', anniversary: 'One-year anniversary',
   reminder_not_redeemed: 'Reminder — subsidy not redeemed',
   reminder_return: 'Reminder — application returned',
   reminder_installation: 'Reminder — installation pending',
@@ -188,14 +225,14 @@ var TEMPLATE_NAMES = {
    Clearly fake numbers (04000010000x). Real customers live in Firestore. ---- */
 function demoCustomers() {
   return [
-    { id: 'demo-a1k9', code: 'demo-a1k9', consumerNo: '040000100001', name: 'Ramesh Das', mobile: '9876543210', address: 'Kalpanagar, Goalpara', area: 'Goalpara', installDate: '2026-10-20', submittedOn: '2026-09-15', systemKw: 3, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0001', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-h8t2', referralCount: 2, rewards: [] },
-    { id: 'demo-b2m8', code: 'demo-b2m8', consumerNo: '040000100002', name: 'Anita Rabha', mobile: '8765432109', address: 'Bhalukdubi, Goalpara', area: 'Goalpara', installDate: '2026-03-15', submittedOn: '2026-02-10', systemKw: 2, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0002', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: null, referralCount: 3, rewards: [] },
-    { id: 'demo-c3n7', code: 'demo-c3n7', consumerNo: '040000100003', name: 'Babul Hussain', mobile: '7654321098', address: 'Nayapara, Goalpara', area: 'Goalpara', installDate: '', submittedOn: '2026-10-02', systemKw: 5, status: 'Installation (Pending)', applicationNo: 'DEMO-NP-0003', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-b2m8', referralCount: 0, rewards: [] },
-    { id: 'demo-d4p6', code: 'demo-d4p6', consumerNo: '040000100004', name: 'Priya Sharma', mobile: '9876501234', address: 'Agia, Goalpara', area: 'Goalpara', installDate: '2026-08-02', submittedOn: '2026-06-18', systemKw: 1, status: 'Subsidy Request (Redeemed)', applicationNo: 'DEMO-NP-0004', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-b2m8', referralCount: 0, rewards: [] },
-    { id: 'demo-e5q5', code: 'demo-e5q5', consumerNo: '040000100005', name: 'Jiten Kalita', mobile: '8765409876', address: 'Baladmari, Goalpara', area: 'Goalpara', installDate: '2026-11-14', submittedOn: '2026-11-05', systemKw: 2, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0005', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-b2m8', referralCount: 0, rewards: [] },
-    { id: 'demo-f6r4', code: 'demo-f6r4', consumerNo: '040000100006', name: 'Monowar Ali', mobile: '7654012345', address: 'Bapuji Nagar, Goalpara', area: 'Goalpara', installDate: '', submittedOn: '2026-04-05', systemKw: 3, status: 'Inspection (Pending)', applicationNo: 'DEMO-NP-0006', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-a1k9', referralCount: 0, rewards: [] },
-    { id: 'demo-g7s3', code: 'demo-g7s3', consumerNo: '040000100007', name: 'Sunita Devi', mobile: '9876123450', address: 'Kalpanagar, Goalpara', area: 'Goalpara', installDate: '', submittedOn: '2025-12-12', systemKw: 2, status: 'Subsidy Request (Return)', applicationNo: 'DEMO-NP-0007', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: true, referredBy: 'demo-a1k9', referralCount: 0, rewards: [] },
-    { id: 'demo-h8t2', code: 'demo-h8t2', consumerNo: '040000100008', name: 'Abdul Karim', mobile: '8765987654', address: 'Bhalukdubi, Goalpara', area: 'Goalpara', installDate: '2026-01-10', submittedOn: '2025-11-20', systemKw: 4, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0008', subDivision: 'Goalpara Electrical Sub-Division', duplicate: true, reverification: false, referredBy: null, referralCount: 1, rewards: [] }
+    { id: 'demo-a1k9', code: 'demo-a1k9', consumerNo: '040000100001', name: 'Ramesh Das', mobile: '9876543210', address: 'Kalpanagar, Goalpara', area: 'Goalpara', installDate: '2026-10-20', submittedOn: '2026-09-15', systemKw: 3, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0001', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-h8t2', referralCount: 2, rewards: [], referred: [{name:'Monowar', consumerNo:'040000100006'}, {name:'Sunita', consumerNo:'040000100007'}], referCode: 'SH7K2Q' },
+    { id: 'demo-b2m8', code: 'demo-b2m8', consumerNo: '040000100002', name: 'Anita Rabha', mobile: '8765432109', address: 'Bhalukdubi, Goalpara', area: 'Goalpara', installDate: '2026-03-15', submittedOn: '2026-02-10', systemKw: 2, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0002', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: null, referralCount: 3, rewards: [], referred: [{name:'Babul', consumerNo:'040000100003'}, {name:'Priya', consumerNo:'040000100004'}, {name:'Jiten', consumerNo:'040000100005'}], referCode: 'SH3M8R' },
+    { id: 'demo-c3n7', code: 'demo-c3n7', consumerNo: '040000100003', name: 'Babul Hussain', mobile: '7654321098', address: 'Nayapara, Goalpara', area: 'Goalpara', installDate: '', submittedOn: '2026-10-02', systemKw: 5, status: 'Installation (Pending)', applicationNo: 'DEMO-NP-0003', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-b2m8', referralCount: 0, rewards: [], referCode: 'SH9D4W' },
+    { id: 'demo-d4p6', code: 'demo-d4p6', consumerNo: '040000100004', name: 'Priya Sharma', mobile: '9876501234', address: 'Agia, Goalpara', area: 'Goalpara', installDate: '2026-08-02', submittedOn: '2026-06-18', systemKw: 1, status: 'Subsidy Request (Redeemed)', applicationNo: 'DEMO-NP-0004', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-b2m8', referralCount: 0, rewards: [], referCode: 'SH5P6T' },
+    { id: 'demo-e5q5', code: 'demo-e5q5', consumerNo: '040000100005', name: 'Jiten Kalita', mobile: '8765409876', address: 'Baladmari, Goalpara', area: 'Goalpara', installDate: '2026-11-14', submittedOn: '2026-11-05', systemKw: 2, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0005', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-b2m8', referralCount: 0, rewards: [], referCode: 'SH2B8N' },
+    { id: 'demo-f6r4', code: 'demo-f6r4', consumerNo: '040000100006', name: 'Monowar Ali', mobile: '7654012345', address: 'Bapuji Nagar, Goalpara', area: 'Goalpara', installDate: '', submittedOn: '2026-04-05', systemKw: 3, status: 'Inspection (Pending)', applicationNo: 'DEMO-NP-0006', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: false, referredBy: 'demo-a1k9', referralCount: 0, rewards: [], referCode: 'SH8F3K' },
+    { id: 'demo-g7s3', code: 'demo-g7s3', consumerNo: '040000100007', name: 'Sunita Devi', mobile: '9876123450', address: 'Kalpanagar, Goalpara', area: 'Goalpara', installDate: '', submittedOn: '2025-12-12', systemKw: 2, status: 'Subsidy Request (Return)', applicationNo: 'DEMO-NP-0007', subDivision: 'Goalpara Electrical Sub-Division', duplicate: false, reverification: true, referredBy: 'demo-a1k9', referralCount: 0, rewards: [], referCode: 'SH4G7X' },
+    { id: 'demo-h8t2', code: 'demo-h8t2', consumerNo: '040000100008', name: 'Abdul Karim', mobile: '8765987654', address: 'Bhalukdubi, Goalpara', area: 'Goalpara', installDate: '2026-01-10', submittedOn: '2025-11-20', systemKw: 4, status: 'Subsidy Disbursal (Disbursed)', applicationNo: 'DEMO-NP-0008', subDivision: 'Goalpara Electrical Sub-Division', duplicate: true, reverification: false, referredBy: null, referralCount: 1, rewards: [], referred: [{name:'Ramesh', consumerNo:'040000100001'}], referCode: 'SH6Q9M' }
   ];
 }
 function defaultMeta() {
@@ -238,6 +275,66 @@ function esc(s) {
 function fmtINR(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
 function inr(n) { return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 }); }
 function firstName(name) { return String(name || '').trim().split(/\s+/)[0] || 'Friend'; }
+/* ---- festival occasions ---- */
+var msgOccasionId = null;   /* selected occasion id; null = next upcoming */
+/* Validate an occasions list; fall back to the built-in list when it is
+   missing, empty or malformed. Always returns a fresh copy. */
+function normalizeOccasions(list) {
+  if (Array.isArray(list) && list.length) {
+    var out = [];
+    list.forEach(function (o) {
+      if (!o || !o.name) return;
+      var id = String(o.id || o.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'occasion';
+      out.push({
+        id: id,
+        name: String(o.name),
+        nameAs: String(o.nameAs || o.name),
+        date: String(o.date || ''),
+        en: String(o.en || ('Happy ' + o.name + '!')),
+        as: String(o.as || ((o.nameAs || o.name) + 'ৰ শুভেচ্ছা!'))
+      });
+    });
+    if (out.length) return out;
+  }
+  return JSON.parse(JSON.stringify(DEFAULT_OCCASIONS));
+}
+/* Occasions sorted by date (earliest first). */
+function sortedOccasions() {
+  var list = normalizeOccasions((meta.settings && meta.settings.occasions) || DEFAULT_OCCASIONS);
+  list.sort(function (a, b) { return (a.date || '9999').localeCompare(b.date || '9999'); });
+  return list;
+}
+/* The next upcoming occasion (first with date >= today); if all are past, the earliest. */
+function nextOccasion() {
+  var list = sortedOccasions();
+  if (!list.length) return null;
+  var today = new Date().toISOString().slice(0, 10);
+  for (var i = 0; i < list.length; i++) {
+    if ((list[i].date || '') >= today) return list[i];
+  }
+  return list[0];
+}
+function currentOccasion() {
+  var list = sortedOccasions();
+  if (!list.length) return null;
+  if (msgOccasionId) {
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === msgOccasionId) return list[i];
+    }
+  }
+  return nextOccasion();
+}
+function setMsgOccasion(id) { msgOccasionId = id; }
+function occasionName(lang) {
+  var o = currentOccasion();
+  if (!o) return '';
+  return lang === 'as' ? o.nameAs : o.name;
+}
+function occasionGreeting(lang) {
+  var o = currentOccasion();
+  if (!o) return '';
+  return lang === 'as' ? o.as : o.en;
+}
 var AS_DIGITS = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯' };
 function asDigits(s) { return String(s).replace(/[0-9]/g, function (d) { return AS_DIGITS[d]; }); }
 function monthsBetween(fromISO, toDate) {
@@ -271,6 +368,113 @@ function fmtDate(iso) {
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function newCode() { return Math.random().toString(36).slice(2, 10); }
+/* ---- refer codes: short, sayable codes ("SH" + 4 chars, no look-alike
+   letters/digits) for customers to share with friends. The reward-link
+   code (doc id, 8 random chars) is too unfriendly to dictate, so the
+   refer code is a separate stored field, unique across customers. */
+var REFER_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function makeReferCode(taken) {
+  taken = taken || {};
+  var code;
+  do {
+    code = 'SH';
+    for (var i = 0; i < 4; i++) code += REFER_CODE_CHARS[Math.floor(Math.random() * REFER_CODE_CHARS.length)];
+  } while (taken[code]);
+  return code;
+}
+/* Find a customer by refer code (case-insensitive). Pass a list to
+   search that list; otherwise searches the loaded customers. */
+function customerByReferCode(code, list) {
+  if (!code) return null;
+  var norm = String(code).trim().toUpperCase();
+  var pool = list || customers;
+  return pool.find(function (c) { return (c.referCode || '').toUpperCase() === norm; }) || null;
+}
+/* Map of refer codes already in use (for generating a unique new one). */
+function referCodeTaken() {
+  var taken = {};
+  customers.forEach(function (c) { if (c.referCode) taken[String(c.referCode).toUpperCase()] = true; });
+  return taken;
+}
+/* One entry of a referrer's stored referred-list: first name + consumer
+   no. ONLY — never a mobile. The public reward page can only read a
+   single doc, so it reads this list instead of querying all customers. */
+function referredEntry(c) { return { name: firstName(c.name), consumerNo: c.consumerNo }; }
+/* Keep each referrer's stored referred-list in sync after a customer's
+   referredBy changes (old referrer loses the entry, new one gains it). */
+function syncReferrerLists(c, oldReferredBy) {
+  var jobs = [];
+  var newRef = c.referredBy ? customerById(c.referredBy) : null;
+  var oldRef = oldReferredBy ? customerById(oldReferredBy) : null;
+  if (oldRef && (!newRef || oldRef.id !== newRef.id)) {
+    oldRef.referred = (oldRef.referred || []).filter(function (x) { return x.consumerNo !== c.consumerNo; });
+    jobs.push(activeDB.saveCustomer(oldRef));
+  }
+  if (newRef && newRef.id !== c.id) {
+    var list = (newRef.referred || []).slice();
+    if (!list.some(function (x) { return x.consumerNo === c.consumerNo; })) list.push(referredEntry(c));
+    newRef.referred = list;
+    jobs.push(activeDB.saveCustomer(newRef));
+  }
+  return Promise.all(jobs);
+}
+/* Rebuild every referrer's stored referred-list from the loaded list
+   (one Firestore batch in the real app). Runs once per session after
+   customers load; later calls are a no-op. */
+var referrerListsEnsured = false;
+function ensureReferrerLists(list) {
+  if (referrerListsEnsured) return Promise.resolve(list);
+  referrerListsEnsured = true;
+  var byRef = {};
+  list.forEach(function (x) { if (x.referredBy) { (byRef[x.referredBy] = byRef[x.referredBy] || []).push(referredEntry(x)); } });
+  var stale = list.filter(function (x) {
+    return JSON.stringify(x.referred || []) !== JSON.stringify(byRef[x.id] || []);
+  });
+  if (!stale.length) return Promise.resolve(list);
+  stale.forEach(function (x) { x.referred = byRef[x.id] || []; });
+  if (activeDB.mode === 'firestore' && typeof db !== 'undefined' && db) {
+    var batch = db.batch();
+    stale.forEach(function (x) { batch.set(db.collection('customers').doc(x.id), { referred: x.referred }, { merge: true }); });
+    return batch.commit().then(function () { return list; }).catch(function () { return list; });
+  }
+  return Promise.resolve(list);
+}
+/* Give every customer without one a unique refer code, and save the new
+   codes back (one Firestore batch in the real app). Runs once per
+   session after customers load; later calls are a no-op. */
+var referCodesEnsured = false;
+function ensureReferCodes(list) {
+  if (referCodesEnsured) return Promise.resolve(list);
+  referCodesEnsured = true;
+  var taken = referCodeTaken();
+  var missing = list.filter(function (c) { return !c.referCode; });
+  if (!missing.length) return Promise.resolve(list);
+  missing.forEach(function (c) {
+    c.referCode = makeReferCode(taken);
+    taken[c.referCode] = true;
+  });
+  if (activeDB.mode === 'firestore' && typeof db !== 'undefined' && db) {
+    var batch = db.batch();
+    missing.forEach(function (c) { batch.set(db.collection('customers').doc(c.id), { referCode: c.referCode }, { merge: true }); });
+    return batch.commit().then(function () { return list; }).catch(function () { return list; });
+  }
+  return Promise.resolve(list);
+}
+/* Give one customer (e.g. on their public reward page) a unique refer
+   code, checking Firestore for a collision first. */
+function ensureCustomerReferCode(c) {
+  if (!c || c.referCode) return Promise.resolve(c);
+  if (activeDB.mode === 'firestore' && typeof db !== 'undefined' && db) {
+    var code = makeReferCode({});
+    return db.collection('customers').where('referCode', '==', code).get().then(function (snap) {
+      if (!snap.empty) return ensureCustomerReferCode(c); /* collision — retry */
+      c.referCode = code;
+      return db.collection('customers').doc(c.id).set({ referCode: code }, { merge: true }).then(function () { return c; });
+    }).catch(function () { c.referCode = code; return c; });
+  }
+  c.referCode = makeReferCode({});
+  return Promise.resolve(c);
+}
 function customerById(id) { return customers.find(function (c) { return c.id === id; }) || null; }
 function customerByCode(code) { return customers.find(function (c) { return c.code === code; }) || null; }
 function referralCount(id) { return customers.filter(function (c) { return c.referredBy === id; }).length; }
@@ -289,6 +493,30 @@ function rewardDue(c) {
   var t = tierReached(c);
   return t > 0 && !recordedTierReward(c, t);
 }
+/* ---- sent tracking: the app only knows the vendor tapped to send
+   (WhatsApp/SMS open an external app), so "sent" means tapped, not
+   delivered — the UI says so wherever it shows it. */
+function recordSent(c, channel, templateKey, style) {
+  if (!c) return Promise.resolve();
+  var now = new Date().toISOString();
+  c.lastSentAt = now;
+  c.lastSentChannel = channel;
+  c.lastSentTemplate = templateKey || '';
+  c.lastSentStyle = style || '';
+  c.sentCount = (c.sentCount || 0) + 1;
+  var log = (c.sentLog || []).slice();
+  log.unshift({ at: now, channel: channel, template: templateKey || '', style: style || '' });
+  c.sentLog = log.slice(0, 10);
+  return activeDB.saveCustomer(c).then(function () { return refreshCustomers(); });
+}
+function sentLabel(c) {
+  if (!c || !c.lastSentAt) return '';
+  var d = new Date(c.lastSentAt);
+  if (isNaN(d.getTime())) return '';
+  var date = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  var time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  return '✅ Sent ' + date + ', ' + time + ' via ' + (c.lastSentChannel || 'message');
+}
 function rewardLink(c) {
   if (typeof location !== 'undefined' && location.href) {
     var base = location.href.split('?')[0].split('#')[0];
@@ -305,7 +533,9 @@ function fillTemplate(text, c, lang) {
     .replace(/\{count\}/g, String(referralCount(c.id)))
     .replace(/\{kw\}/g, String(c.systemKw == null ? '' : c.systemKw))
     .replace(/\{link\}/g, rewardLink(c))
-    .replace(/\{poster\}/g, (meta.settings && meta.settings.posterUrl) || DEFAULT_SETTINGS.posterUrl);
+    .replace(/\{poster\}/g, (meta.settings && meta.settings.posterUrl) || DEFAULT_SETTINGS.posterUrl)
+    .replace(/\{occasion\}/g, occasionName(lang))
+    .replace(/\{greeting\}/g, occasionGreeting(lang));
 }
 function buildMessage(key, c, style) {
   var t = (style === 'funny')
@@ -510,6 +740,8 @@ function filterCustomers(list, f) {
     if (f.status && c.status !== f.status) return false;
     if (f.subDiv && c.subDivision !== f.subDiv) return false;
     if (f.kw && String(c.systemKw) !== String(f.kw)) return false;
+    if (f.sent === 'sent' && !c.lastSentAt) return false;
+    if (f.sent === 'notsent' && c.lastSentAt) return false;
     if (q && (c.name + ' ' + c.consumerNo + ' ' + c.mobile + ' ' + (c.address || '')).toLowerCase().indexOf(q) < 0) return false;
     return true;
   });
@@ -524,7 +756,12 @@ function toFirestore(c) {
     applicationNo: c.applicationNo || '', subDivision: c.subDivision || '',
     duplicate: !!c.duplicate, reverification: !!c.reverification,
     referredBy: c.referredBy || null, referralCount: +c.referralCount || 0,
-    rewards: c.rewards || []
+    rewards: c.rewards || [],
+    referCode: c.referCode || '',
+    referred: c.referred || [],
+    lastSentAt: c.lastSentAt || '', lastSentChannel: c.lastSentChannel || '',
+    lastSentTemplate: c.lastSentTemplate || '', lastSentStyle: c.lastSentStyle || '',
+    sentCount: +c.sentCount || 0, sentLog: (c.sentLog || []).slice(0, 10)
   };
 }
 function fromFirestore(doc) {
@@ -538,7 +775,12 @@ function fromFirestore(doc) {
     applicationNo: d.applicationNo || '', subDivision: d.subDivision || '',
     duplicate: !!d.duplicate, reverification: !!d.reverification,
     referredBy: d.referredBy || null, referralCount: +d.referralCount || 0,
-    rewards: d.rewards || []
+    rewards: d.rewards || [],
+    referCode: d.referCode || '',
+    referred: d.referred || [],
+    lastSentAt: d.lastSentAt || '', lastSentChannel: d.lastSentChannel || '',
+    lastSentTemplate: d.lastSentTemplate || '', lastSentStyle: d.lastSentStyle || '',
+    sentCount: +d.sentCount || 0, sentLog: d.sentLog || []
   };
 }
 function computeReferralCounts(list) {
@@ -558,6 +800,7 @@ var SampleDB = {
   },
   saveCustomer: function (c) {
     var list = store.load(SAMPLE_LS_KEY) || demoCustomers();
+    if (!c.referCode) c.referCode = makeReferCode(referCodeTaken());
     var i = list.findIndex(function (x) { return x.id === c.id; });
     if (i >= 0) list[i] = c; else list.push(c);
     store.save(SAMPLE_LS_KEY, list);
@@ -578,7 +821,7 @@ var SampleDB = {
         if (row.installDate) ex.installDate = row.installDate;
         updated++;
       } else {
-        var c = { id: 'smp-' + newCode(), code: newCode(), consumerNo: row.consumerNo, name: row.name, mobile: row.mobile, address: row.address || '', area: row.area || 'Goalpara', installDate: row.installDate || '', submittedOn: row.submittedOn || '', systemKw: row.systemKw || 0, status: row.status || 'Upload Agreement (Pending)', applicationNo: row.applicationNo || '', subDivision: row.subDivision || '', duplicate: !!row.duplicate, reverification: !!row.reverification, referredBy: null, referralCount: 0, rewards: [] };
+        var c = { id: 'smp-' + newCode(), code: newCode(), consumerNo: row.consumerNo, name: row.name, mobile: row.mobile, address: row.address || '', area: row.area || 'Goalpara', installDate: row.installDate || '', submittedOn: row.submittedOn || '', systemKw: row.systemKw || 0, status: row.status || 'Upload Agreement (Pending)', applicationNo: row.applicationNo || '', subDivision: row.subDivision || '', duplicate: !!row.duplicate, reverification: !!row.reverification, referredBy: null, referralCount: 0, rewards: [], referCode: makeReferCode(referCodeTaken()) };
         list.push(c); byConsumer[c.consumerNo] = c; added++;
       }
     });
@@ -587,6 +830,10 @@ var SampleDB = {
       var t = byConsumer[row.consumerNo], r = byConsumer[row.referredByConsumerNo];
       if (t && r && t.id !== r.id) t.referredBy = r.id;
     });
+    /* rebuild each referrer's stored referred-list from the resolved links */
+    var byRef = {};
+    list.forEach(function (x) { if (x.referredBy) { (byRef[x.referredBy] = byRef[x.referredBy] || []).push(referredEntry(x)); } });
+    list.forEach(function (x) { x.referred = byRef[x.id] || []; });
     store.save(SAMPLE_LS_KEY, list);
     return Promise.resolve({ added: added, updated: updated });
   },
@@ -595,13 +842,17 @@ var SampleDB = {
     if (!stored) return Promise.resolve(defaultMeta());
     var storedVersion = stored.templatesVersion || 0;
     if (storedVersion < TEMPLATES_VERSION) {
-      /* Templates were rewritten in v3 (emoji banner, poster link, funny
-         variants, bumper offer = referral reward). Stored old templates
-         would override the new defaults — replace them and save the
-         upgrade back so the next load already has v3. */
+      /* Templates were rewritten in v4 (Puja offer is now the Festival
+         offer with an occasion picker; the poster link is the short
+         link). Stored old templates would override the new defaults —
+         replace them and save the upgrade back so the next load
+         already has v4. */
       var upgradedSettings = Object.assign({}, DEFAULT_SETTINGS, stored.settings || {});
       if (upgradedSettings.offerTitle === OLD_OFFER_TITLE) upgradedSettings.offerTitle = DEFAULT_SETTINGS.offerTitle;
-      if (upgradedSettings.offerText === OLD_OFFER_TEXT) upgradedSettings.offerText = DEFAULT_SETTINGS.offerText;
+      if (upgradedSettings.offerText === OLD_OFFER_TEXT || upgradedSettings.offerText === OLD_OFFER_TEXT_V3) upgradedSettings.offerText = DEFAULT_SETTINGS.offerText;
+      upgradedSettings.geminiModel = GEMINI_MODEL_ID;
+      if (upgradedSettings.posterUrl === OLD_POSTER_URL) upgradedSettings.posterUrl = POSTER_SHORT_URL;
+      upgradedSettings.occasions = normalizeOccasions(upgradedSettings.occasions);
       var upgraded = {
         settings: upgradedSettings,
         templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
@@ -614,6 +865,13 @@ var SampleDB = {
     stored.settings = Object.assign({}, DEFAULT_SETTINGS, stored.settings || {});
     stored.templates = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), stored.templates || {});
     stored.funnyTemplates = Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), stored.funnyTemplates || {});
+    /* The model is locked and the poster link is the short link — force
+       any stored value that still differs, and save back once. */
+    var needsSave = false;
+    if (stored.settings.geminiModel !== GEMINI_MODEL_ID) { stored.settings.geminiModel = GEMINI_MODEL_ID; needsSave = true; }
+    if (stored.settings.posterUrl === OLD_POSTER_URL) { stored.settings.posterUrl = POSTER_SHORT_URL; needsSave = true; }
+    stored.settings.occasions = normalizeOccasions(stored.settings.occasions);
+    if (needsSave) store.save(LS_KEY, stored);
     return Promise.resolve(stored);
   },
   saveMeta: function (m) { store.save(LS_KEY, m); return Promise.resolve(); }
@@ -636,6 +894,7 @@ var FirestoreDB = {
   },
   saveCustomer: function (c) {
     if (!c.id || c.id.indexOf('demo-') === 0 || c.id.indexOf('smp-') === 0) { c.id = newCode(); c.code = c.id; }
+    if (!c.referCode) c.referCode = makeReferCode(referCodeTaken());
     return db.collection('customers').doc(c.id).set(toFirestore(c), { merge: true }).then(function () { return c; });
   },
   importRows: function (parsed) {
@@ -643,6 +902,8 @@ var FirestoreDB = {
     return self.listCustomers().then(function (existing) {
       var byConsumer = {};
       existing.forEach(function (x) { byConsumer[x.consumerNo] = x; });
+      var takenCodes = {};
+      existing.forEach(function (x) { if (x.referCode) takenCodes[String(x.referCode).toUpperCase()] = true; });
       var batch = db.batch();
       var ops = 0, added = 0, updated = 0;
       var writes = [];
@@ -667,7 +928,8 @@ var FirestoreDB = {
             ops++; updated++;
           } else {
             var id = newCode();
-            var c = { id: id, code: id, consumerNo: row.consumerNo, name: row.name, mobile: row.mobile, address: row.address || '', area: row.area || 'Goalpara', installDate: row.installDate || '', submittedOn: row.submittedOn || '', systemKw: row.systemKw || 0, status: row.status || 'Upload Agreement (Pending)', applicationNo: row.applicationNo || '', subDivision: row.subDivision || '', duplicate: !!row.duplicate, reverification: !!row.reverification, referredBy: null, referralCount: 0, rewards: [] };
+            var c = { id: id, code: id, consumerNo: row.consumerNo, name: row.name, mobile: row.mobile, address: row.address || '', area: row.area || 'Goalpara', installDate: row.installDate || '', submittedOn: row.submittedOn || '', systemKw: row.systemKw || 0, status: row.status || 'Upload Agreement (Pending)', applicationNo: row.applicationNo || '', subDivision: row.subDivision || '', duplicate: !!row.duplicate, reverification: !!row.reverification, referredBy: null, referralCount: 0, rewards: [], referCode: makeReferCode(takenCodes) };
+            takenCodes[c.referCode] = true;
             batch.set(db.collection('customers').doc(id), toFirestore(c));
             byConsumer[row.consumerNo] = c;
             ops++; added++;
@@ -695,6 +957,13 @@ var FirestoreDB = {
           var want = counts[x.id] || 0;
           if ((x.referralCount || 0) !== want) { b2.update(db.collection('customers').doc(x.id), { referralCount: want }); n++; }
         });
+        /* rebuild each referrer's stored referred-list from the resolved links */
+        var byRef = {};
+        list.forEach(function (x) { if (x.referredBy) { (byRef[x.referredBy] = byRef[x.referredBy] || []).push(referredEntry(x)); } });
+        list.forEach(function (x) {
+          var wantList = byRef[x.id] || [];
+          if (JSON.stringify(x.referred || []) !== JSON.stringify(wantList)) { b2.update(db.collection('customers').doc(x.id), { referred: wantList }); n++; }
+        });
         return n ? b2.commit() : Promise.resolve();
       }).then(function () { return { added: added, updated: updated }; });
     });
@@ -704,16 +973,27 @@ var FirestoreDB = {
       if (!doc.exists) return defaultMeta();
       var d = doc.data();
       var settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
+      /* The model is locked and the poster link is the short link —
+         force any stored value that still differs. The upgrade branch
+         below saves it back; the normal path saves it back when it
+         changed, so the next login already has it. */
+      var rawModel = settings.geminiModel;
+      settings.geminiModel = GEMINI_MODEL_ID;
+      var modelFixed = settings.geminiModel !== rawModel;
+      var rawPoster = settings.posterUrl;
+      if (rawPoster === OLD_POSTER_URL) settings.posterUrl = POSTER_SHORT_URL;
+      var posterFixed = settings.posterUrl !== rawPoster;
+      settings.occasions = normalizeOccasions(settings.occasions);
       var storedVersion = d.templatesVersion || 0;
       if (storedVersion < TEMPLATES_VERSION) {
-        /* Templates were rewritten in v3 (emoji banner, poster link, funny
-           variants, bumper offer = referral reward). The stored doc still
-           holds the old wording, and it overrides the new defaults —
-           replace it and save the upgrade back so the next login already
-           has v3. No human has edited templates yet, so nothing
-           deliberate is lost. */
+        /* Templates were rewritten in v4 (Puja offer is now the Festival
+           offer with an occasion picker; the poster link is the short
+           link). The stored doc still holds the old wording, and it
+           overrides the new defaults — replace it and save the upgrade
+           back so the next login already has v4. No human has edited
+           templates yet, so nothing deliberate is lost. */
         if (settings.offerTitle === OLD_OFFER_TITLE) settings.offerTitle = DEFAULT_SETTINGS.offerTitle;
-        if (settings.offerText === OLD_OFFER_TEXT) settings.offerText = DEFAULT_SETTINGS.offerText;
+        if (settings.offerText === OLD_OFFER_TEXT || settings.offerText === OLD_OFFER_TEXT_V3) settings.offerText = DEFAULT_SETTINGS.offerText;
         var upgraded = {
           settings: settings,
           templates: JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)),
@@ -722,12 +1002,14 @@ var FirestoreDB = {
         };
         return db.collection('meta').doc('settings').set(upgraded, { merge: true }).then(function () { return upgraded; });
       }
-      return {
+      var result = {
         settings: settings,
         templates: Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_TEMPLATES)), d.templates || {}),
         funnyTemplates: Object.assign({}, JSON.parse(JSON.stringify(FUNNY_TEMPLATES)), d.funnyTemplates || {}),
         templatesVersion: storedVersion
       };
+      if (!modelFixed && !posterFixed) return result;
+      return db.collection('meta').doc('settings').set({ settings: settings }, { merge: true }).then(function () { return result; });
     });
   },
   saveMeta: function (m) {
@@ -739,7 +1021,7 @@ var activeDB = SampleDB;
 function refreshCustomers() {
   return activeDB.listCustomers().then(function (list) {
     customers = list;
-    return list;
+    return ensureReferCodes(list).then(ensureReferrerLists);
   });
 }
 function refreshMeta() {
@@ -767,10 +1049,11 @@ if (typeof document !== 'undefined') {
     ['#customers', '👥 Customers'], ['#quote', '🧾 Make a quote'],
     ['#rewards', '🎁 Rewards'], ['#settings', '⚙️ Settings']
   ];
-  var listState = { q: '', status: '', subDiv: '', kw: '', sort: 'submitted-desc' };
-  var msgKey = 'puja';
+  var listState = { q: '', status: '', subDiv: '', kw: '', sent: '', sort: 'submitted-desc' };
+  var msgKey = 'festival';
   var msgStyle = 'regular';   /* 'regular' | 'funny' — Messages tab + customer page */
   var msgAI = null;           /* Gemini-personalized message {en, as, combined} or null */
+  var msgAIStatus = null;     /* inline status line for the AI button (never alert()) */
   /* Messages tab state: which template, which customer, search, disbursed-only filter. */
   var msgCustomerId = null;
   var msgSearch = '';
@@ -788,8 +1071,9 @@ if (typeof document !== 'undefined') {
   }
   /* Bumper-offer banner — bright, editable in Settings. Shown on the
      Dashboard and the Messages tab. Clear the title + text in Settings
-     to hide it. The bumper offer is the referral reward — the subsidy is
-     a secondary line. The vendor replaces it with his real offer. */
+     to hide it. The bumper offer is the referral reward plus the care
+     angle — the subsidy figure is never in it. The vendor replaces it
+     with his real offer. */
   function offerBannerHTML() {
     var o = meta.settings;
     if (!o.offerTitle && !o.offerText) return '';
@@ -819,6 +1103,7 @@ if (typeof document !== 'undefined') {
     renderTabs(h.split('?')[0]);
     if (h === '#messages') renderMessages();
     else if (h === '#reminders') renderReminders();
+    else if (h === '#sent') renderSentList();
     else if (h === '#customers') renderCustomers();
     else if (h === '#quote') renderQuote();
     else if (h === '#rewards') renderRewards();
@@ -868,6 +1153,7 @@ if (typeof document !== 'undefined') {
       (c.installDate ? '<span>Installed ' + esc(fmtDate(c.installDate)) + '</span>' : '<span style="color:var(--muted)">Not installed yet</span>') + '</div>' +
       (rc ? '<div class="cust-row"><span class="pill ok">' + rc + ' referral' + (rc > 1 ? 's' : '') + '</span>' + (rewardDue(c) ? '<span class="pill due">Reward due</span>' : '') + '</div>' : '') +
       ((c.duplicate || c.reverification) ? '<div class="cust-row">' + (c.duplicate ? '<span class="pill due">Duplicate</span>' : '') + (c.reverification ? '<span class="pill due">Reverification</span>' : '') + '</div>' : '') +
+      (sentLabel(c) ? '<div class="cust-row"><span style="color:var(--muted);font-size:12.5px">' + esc(sentLabel(c)) + '</span></div>' : '') +
       '</div>';
   }
   function renderCustomerCards(list, container, isSample) {
@@ -921,6 +1207,7 @@ if (typeof document !== 'undefined') {
     if (btn) { btn.textContent = 'Opening WhatsApp…'; }
     window.open(waLink(c, msg.combined), '_blank');
     setTimeout(function () { if (btn) btn.textContent = old; }, 2000);
+    recordSent(c, 'WhatsApp', REMINDER_BY_STAGE[c.status], 'regular').then(function () { route(); });
   };
   window.remindSms = function (id, btn) {
     var c = customerById(id);
@@ -931,6 +1218,15 @@ if (typeof document !== 'undefined') {
     if (btn) { btn.textContent = 'Opening SMS…'; }
     openSms(c, msg.combined);
     setTimeout(function () { if (btn) btn.textContent = old; }, 2000);
+    recordSent(c, 'SMS', REMINDER_BY_STAGE[c.status], 'regular').then(function () { route(); });
+  };
+  window.copyReminder = function (id, btn) {
+    var c = customerById(id);
+    if (!c) return;
+    var msg = buildReminder(c);
+    if (!msg) return;
+    copyText(msg.combined, btn);
+    recordSent(c, 'Copy', REMINDER_BY_STAGE[c.status], 'regular').then(function () { route(); });
   };
 
   /* ---- Messages tab: pick template → pick customer → tap send ---- */
@@ -944,16 +1240,24 @@ if (typeof document !== 'undefined') {
     if (msgAI) return msgAI.combined;
     return buildMessage(msgKey, c, msgStyle).combined;
   };
+  /* Show the AI status line under the button and re-render the current
+     view. Never alert() here — this browser auto-dismisses native
+     dialogs, so an alert shows nothing at all. */
+  function showAIStatus(text) {
+    msgAIStatus = text;
+    if (typeof location !== 'undefined' && location.hash.indexOf('#customer-') === 0) renderCustomer(location.hash.slice('#customer-'.length));
+    else renderMessages();
+  }
   /* Personalize the shown message with Gemini. The API key comes from
      Settings (stored in the Firestore meta doc only, never in the repo
-     or logs). No key -> hint where to get a free one. */
+     or logs). No key -> inline hint where to get a free one. */
   window.personalizeMessage = function (customerId, btn) {
     var c = customerId ? customerById(customerId) : (msgCustomerId ? customerById(msgCustomerId) : null);
-    if (!c) { alert('Pick a customer first — tap a name below.'); return; }
+    if (!c) { showAIStatus('Pick a customer first — tap a name below.'); return; }
     var s = meta.settings || {};
     var key = (s.geminiApiKey || '').trim();
-    if (!key) { alert('Add your free Gemini API key in Settings — get one at Google AI Studio (aistudio.google.com).'); return; }
-    var model = (s.geminiModel || 'gemini-2.0-flash').trim() || 'gemini-2.0-flash';
+    if (!key) { showAIStatus('Add your free Gemini API key in Settings — get one at Google AI Studio (aistudio.google.com).'); return; }
+    var model = GEMINI_MODEL_ID;
     var base = buildMessage(msgKey, c, msgStyle);
     var months = monthsBetween(c.installDate || c.submittedOn);
     var prompt = 'You write WhatsApp messages for a rooftop solar vendor in Goalpara, Assam. Rewrite the message below to be warmer and more personal for this customer. Keep it short and friendly, in the same two parts: first the English version, then the same message in Assamese (proper Assamese script). Keep the customer first name, all numbers, the reward link and the poster link exactly as they are — do not change, drop or invent any of them. Reply ONLY with JSON: {"en": "...", "as": "..."}.\n\nCustomer: first name ' + firstName(c.name) + ', ' + months + ' month(s) since install, ' + c.systemKw + ' kW system, ' + referralCount(c.id) + ' referral(s), stage: ' + c.status + '.\n\nMessage:\n' + base.combined;
@@ -969,20 +1273,45 @@ if (typeof document !== 'undefined') {
       var out = JSON.parse(text);
       if (!out.en || !out.as) throw new Error('bad');
       msgAI = { en: out.en, as: out.as, combined: out.en + '\n\n' + out.as };
+      msgAIStatus = null;
       if (location.hash.indexOf('#customer-') === 0) renderCustomer(location.hash.slice('#customer-'.length));
       else renderMessages();
     }).catch(function () {
-      alert('Could not personalize — check the Gemini API key and model in Settings and try again.');
+      showAIStatus('Could not personalize — check the Gemini API key and model in Settings and try again.');
     }).finally(function () { if (btn) btn.textContent = old; });
   };
 
   window.sendMsg = function (kind, btn) {
     var c = msgCustomerId ? customerById(msgCustomerId) : null;
-    if (!c) { alert('Pick a customer first — tap a name below.'); return; }
+    if (!c) { showAIStatus('Pick a customer first — tap a name below.'); return; }
     var msg = currentMsgText(c);
+    var channel = kind === 'wa' ? 'WhatsApp' : kind === 'sms' ? 'SMS' : 'Copy';
     if (kind === 'wa') window.open(waLink(c, msg), '_blank');
     else if (kind === 'sms') openSms(c, msg);
     else copyText(msg, btn);
+    /* Record the tap as sent (the app can't see whether WhatsApp/SMS
+       actually delivered it — the UI says so). */
+    recordSent(c, channel, msgKey, msgAI ? 'AI' : msgStyle).then(function () { route(); });
+  };
+  /* Customer-detail message buttons — same send + record as the
+     Messages tab, so the Sent list sees them too. */
+  window.msgCustomerWa = function (id) {
+    var c = customerById(id);
+    if (!c) return;
+    window.open(waLink(c, currentMsgText(c)), '_blank');
+    recordSent(c, 'WhatsApp', msgKey, msgAI ? 'AI' : msgStyle).then(function () { route(); });
+  };
+  window.msgCustomerSms = function (id) {
+    var c = customerById(id);
+    if (!c) return;
+    openSms(c, currentMsgText(c));
+    recordSent(c, 'SMS', msgKey, msgAI ? 'AI' : msgStyle).then(function () { route(); });
+  };
+  window.msgCustomerCopy = function (id, btn) {
+    var c = customerById(id);
+    if (!c) return;
+    copyText(currentMsgText(c), btn);
+    recordSent(c, 'Copy', msgKey, msgAI ? 'AI' : msgStyle).then(function () { route(); });
   };
   function renderMessages() {
     var c = msgCustomerId ? customerById(msgCustomerId) : null;
@@ -995,19 +1324,24 @@ if (typeof document !== 'undefined') {
       return '<option value="' + k + '"' + (msgKey === k ? ' selected' : '') + '>' + TEMPLATE_NAMES[k] + '</option>';
     }).join('');
     var pickRows = matches.map(function (x) {
-      return '<div class="pick-row" onclick="msgCustomerId=\'' + x.id + '\';msgAI=null;renderMessages()"><div><b>' + esc(x.name) + '</b> · ' + esc(x.consumerNo) + '<br><span style="color:var(--muted);font-size:12.5px">' + esc(stageEmoji(x.status)) + ' ' + esc(x.status) + ' · ' + esc(x.systemKw) + ' kW</span></div><span style="font-size:22px;color:var(--muted)">›</span></div>';
+      return '<div class="pick-row" onclick="msgCustomerId=\'' + x.id + '\';msgAI=null;msgAIStatus=null;renderMessages()"><div><b>' + esc(x.name) + '</b> · ' + esc(x.consumerNo) + '<br><span style="color:var(--muted);font-size:12.5px">' + esc(stageEmoji(x.status)) + ' ' + esc(x.status) + ' · ' + esc(x.systemKw) + ' kW</span>' + (sentLabel(x) ? '<br><span style="color:var(--muted);font-size:12.5px">' + esc(sentLabel(x)) + '</span>' : '') + '</div><span style="font-size:22px;color:var(--muted)">›</span></div>';
+    }).join('');
+    var occ = currentOccasion();
+    var occOptions = sortedOccasions().map(function (o) {
+      return '<option value="' + esc(o.id) + '"' + (occ && occ.id === o.id ? ' selected' : '') + '>' + esc(o.name) + ' · ' + esc(fmtDate(o.date)) + '</option>';
     }).join('');
     var msgText = currentMsgText(c || previewCustomer());
     view.innerHTML =
-      '<h2>💬 Messages</h2><p class="sub">Pick a template, pick a customer, tap send. English + Assamese in one message — name, months, referrals and reward link fill in by themselves.</p>' +
+      '<h2>💬 Messages</h2><p class="sub">Pick a template, pick a customer, tap send. English + Assamese in one message — name, months, referrals and reward link fill in by themselves. “Sent” means you tapped to send — the app can’t confirm delivery in WhatsApp or SMS. <a href="#sent">📤 Sent list →</a></p>' +
       offerBannerHTML() +
       (mode === 'sample' ? sampleBanner() : '') +
       '<div class="card"><h3 style="margin-top:0">1 · Choose a message 💬</h3>' +
-      '<select id="msgTpl2" onchange="msgKey=this.value;msgAI=null;renderMessages()">' + tplOptions + '</select>' +
-      '<div class="btnrow" style="margin-top:8px"><button class="' + (msgStyle === 'regular' ? '' : 'secondary') + '" onclick="msgStyle=\'regular\';msgAI=null;renderMessages()">😊 Regular</button>' +
-      '<button class="' + (msgStyle === 'funny' ? '' : 'secondary') + '" onclick="msgStyle=\'funny\';msgAI=null;renderMessages()">😂 Funny</button></div></div>' +
+      '<select id="msgTpl2" onchange="msgKey=this.value;msgAI=null;msgAIStatus=null;renderMessages()">' + tplOptions + '</select>' +
+      (msgKey === 'festival' ? '<select id="msgOcc" style="margin-top:8px" onchange="setMsgOccasion(this.value);msgAI=null;msgAIStatus=null;renderMessages()">' + occOptions + '</select><p class="sub">Occasion fills into the message — add more occasions in Settings.</p>' : '') +
+      '<div class="btnrow" style="margin-top:8px"><button class="' + (msgStyle === 'regular' ? '' : 'secondary') + '" onclick="msgStyle=\'regular\';msgAI=null;msgAIStatus=null;renderMessages()">😊 Regular</button>' +
+      '<button class="' + (msgStyle === 'funny' ? '' : 'secondary') + '" onclick="msgStyle=\'funny\';msgAI=null;msgAIStatus=null;renderMessages()">😂 Funny</button></div></div>' +
       '<div class="card"><h3 style="margin-top:0">2 · Choose a customer 👥</h3>' +
-      (c ? '<p style="margin:0 0 10px">✅ <b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW · ' + esc(c.status) + ' <a href="#" onclick="msgCustomerId=null;msgAI=null;renderMessages();return false;">Change</a></p>'
+      (c ? '<p style="margin:0 0 10px">✅ <b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW · ' + esc(c.status) + ' <a href="#" onclick="msgCustomerId=null;msgAI=null;msgAIStatus=null;renderMessages();return false;">Change</a></p>'
         : '<div class="btnrow" style="margin:0 0 10px"><button class="' + (msgOnlyDisbursed ? 'secondary' : '') + '" onclick="msgOnlyDisbursed=false;renderMessages()">All customers</button>' +
           '<button class="' + (msgOnlyDisbursed ? '' : 'secondary') + '" onclick="msgOnlyDisbursed=true;renderMessages()">✅ Disbursed only</button></div>' +
           '<input id="mq" placeholder="Search name, consumer no., mobile…" value="' + esc(msgSearch) + '" oninput="msgSearch=this.value;renderMessages()">' +
@@ -1016,13 +1350,14 @@ if (typeof document !== 'undefined') {
       '</div>' +
       '<div class="card"><h3 style="margin-top:0">3 · Preview &amp; send ' + (c ? 'to ' + esc(firstName(c.name)) : '(sample preview — pick a customer to fill in their details)') + '</h3>' +
       '<div class="msgbox">' + esc(msgText) + '</div>' +
-      (msgAI ? '<p class="sub">✨ AI-personalized version — <a href="#" onclick="msgAI=null;renderMessages();return false;">use the template instead</a></p>' : '') +
+      (msgAI ? '<p class="sub">✨ AI-personalized version — <a href="#" onclick="msgAI=null;msgAIStatus=null;renderMessages();return false;">use the template instead</a></p>' : '') +
       '<div class="btnrow big">' +
       '<button class="whatsapp" onclick="sendMsg(\'wa\', this)">💬 WhatsApp</button>' +
       '<button class="sms" onclick="sendMsg(\'sms\', this)">✉️ SMS</button>' +
       '<button class="secondary" onclick="sendMsg(\'copy\', this)">📋 Copy message</button>' +
       '<button class="secondary" onclick="personalizeMessage(null, this)">✨ Personalize with AI</button>' +
       '</div>' +
+      (msgAIStatus ? '<p class="sub ai-status">⚠️ ' + esc(msgAIStatus) + '</p>' : '') +
       ((meta.settings && meta.settings.geminiApiKey) ? '' : '<p class="sub">✨ Personalize with AI needs a key — add your free Gemini API key in Settings (get one at Google AI Studio, aistudio.google.com).</p>') +
       smsHint() + '</div>';
     var mq = document.getElementById('mq');
@@ -1040,7 +1375,7 @@ if (typeof document !== 'undefined') {
         return '<div class="need-row"><div><b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW<br><span style="color:var(--muted);font-size:12.5px">' + esc(NEEDS_ACTION[st]) + ' Applied ' + esc(fmtDate(c.submittedOn)) + '.</span></div>' +
           '<div class="btnrow remind-btns"><button class="whatsapp" onclick="remindCustomer(\'' + c.id + '\', this)">WhatsApp</button>' +
           '<button class="sms" onclick="remindSms(\'' + c.id + '\', this)">SMS</button>' +
-          '<button class="secondary" onclick="copyText(buildReminder(customerById(\'' + c.id + '\')).combined, this)">Copy</button></div></div>';
+          '<button class="secondary" onclick="copyReminder(\'' + c.id + '\', this)">Copy</button></div></div>';
       }).join('');
       return '<div class="card"><h3 style="margin-top:0">' + esc(stageEmoji(st)) + ' ' + esc(st) + ' — ' + list.length + '</h3><p class="sub">' + esc(NEEDS_ACTION[st]) + '</p>' + rows + '</div>';
     }).join('');
@@ -1049,6 +1384,21 @@ if (typeof document !== 'undefined') {
       (mode === 'sample' ? sampleBanner() : '') +
       smsHint() +
       (blocks || '<div class="card"><p>Nothing stuck — every application is moving. 🎉</p></div>');
+  }
+
+  /* ---- Sent list: everyone messaged from the app, newest first ---- */
+  function renderSentList() {
+    var sent = customers.filter(function (c) { return !!c.lastSentAt; }).slice()
+      .sort(function (a, b) { return (b.lastSentAt || '').localeCompare(a.lastSentAt || ''); });
+    var rows = sent.map(function (c) {
+      return '<div class="pick-row" onclick="location.hash=\'#customer-' + c.id + '\'"><div><b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + '<br><span style="color:var(--muted);font-size:12.5px">' + esc(sentLabel(c)) + (c.lastSentTemplate ? ' · ' + esc(TEMPLATE_NAMES[c.lastSentTemplate] || c.lastSentTemplate) : '') + (c.sentCount > 1 ? ' · ' + c.sentCount + ' sends' : '') + '</span></div><span style="font-size:22px;color:var(--muted)">›</span></div>';
+    }).join('');
+    view.innerHTML =
+      '<p><a href="#messages">← Messages</a></p>' +
+      '<h2>📤 Sent list</h2>' +
+      '<p class="sub">Everyone you have messaged from this app, newest first. “Sent” means you tapped WhatsApp, SMS or Copy — the app can’t see whether the message was actually delivered.</p>' +
+      (mode === 'sample' ? sampleBanner() : '') +
+      (rows ? '<div class="card">' + rows + '</div>' : '<div class="card"><p>Nothing sent yet — send your first message from the Messages tab.</p></div>');
   }
 
   function renderCustomers() {
@@ -1079,6 +1429,9 @@ if (typeof document !== 'undefined') {
       subs.map(function (a) { return '<option ' + (listState.subDiv === a ? 'selected' : '') + ' value="' + esc(a) + '">' + esc(a.replace(/ Electrical Sub-Division/i, '')) + '</option>'; }).join('') + '</select>' +
       '<select id="ckw" onchange="listState.kw=this.value;renderCustomers()"><option value="">All sizes</option>' +
       kws.map(function (k) { return '<option ' + (listState.kw === k ? 'selected' : '') + ' value="' + esc(k) + '">' + esc(k) + ' kW</option>'; }).join('') + '</select>' +
+      '<select id="csent" onchange="listState.sent=this.value;renderCustomers()"><option value="">Sent: all</option>' +
+      '<option value="sent"' + (listState.sent === 'sent' ? ' selected' : '') + '>✅ Sent</option>' +
+      '<option value="notsent"' + (listState.sent === 'notsent' ? ' selected' : '') + '>Not sent yet</option></select>' +
       '</div><div class="btnrow">' +
       '<button class="secondary" onclick="location.hash=\'#customer-new\'">+ Add customer</button>' +
       '<button class="secondary" onclick="document.getElementById(\'csvfile\').click()">Import CSV (portal export)</button>' +
@@ -1125,10 +1478,15 @@ if (typeof document !== 'undefined') {
     var flags = (c.duplicate ? ' <span class="pill due">Duplicate entry — check</span>' : '') +
       (c.reverification ? ' <span class="pill due">Reverification needed</span>' : '');
     var remind = buildReminder(c);
+    var occ = currentOccasion();
+    var occOptions = sortedOccasions().map(function (o) {
+      return '<option value="' + esc(o.id) + '"' + (occ && occ.id === o.id ? ' selected' : '') + '>' + esc(o.name) + ' · ' + esc(fmtDate(o.date)) + '</option>';
+    }).join('');
     view.innerHTML =
       '<p><a href="#customers">← Customers</a></p>' +
       '<h2>' + esc(c.name) + '</h2>' +
       '<p class="sub">' + esc(c.area) + ' · ' + esc(c.systemKw) + ' kW · ' + esc(c.status) + flags + '</p>' +
+      (sentLabel(c) ? '<p class="sub">' + esc(sentLabel(c)) + (c.sentCount > 1 ? ' · ' + c.sentCount + ' sends' : '') + (c.lastSentTemplate ? ' · ' + esc(TEMPLATE_NAMES[c.lastSentTemplate] || c.lastSentTemplate) : '') + '</p>' : '') +
       (mode === 'sample' ? sampleBanner() : '') +
       '<div class="card"><dl class="kv">' +
       '<dt>Consumer no.</dt><dd>' + esc(c.consumerNo) + '</dd>' +
@@ -1140,9 +1498,10 @@ if (typeof document !== 'undefined') {
       '<dt>Installed on</dt><dd>' + esc(fmtDate(c.installDate)) + (c.installDate ? '' : ' — not in the portal export; add it here when the plant is installed.') + '</dd>' +
       '<dt>System</dt><dd>' + esc(c.systemKw) + ' kW</dd>' +
       '<dt>Referred by</dt><dd>' + (c.referredBy && customerById(c.referredBy) ? esc(customerById(c.referredBy).name) : '—') + '</dd>' +
-      '<dt>Referred</dt><dd>' + (refs.length ? refs.map(function (r) { return esc(r.name); }).join(', ') : 'Nobody yet') + '</dd>' +
+      '<dt>Your refer code</dt><dd><b>' + esc(c.referCode || '—') + '</b> ' + (c.referCode ? '<button class="secondary" onclick="copyText(\'' + esc(c.referCode) + '\', this)">Copy code</button>' : '') + '</dd>' +
+      '<dt>Referred</dt><dd>' + (refs.length ? refs.map(function (r) { return esc(r.name) + ' (' + esc(r.consumerNo) + ')'; }).join(', ') : 'Nobody yet') + '</dd>' +
       '</dl></div>' +
-      (remind ? '<div class="card"><h3 style="margin-top:0">Needs action ⏰</h3><p>' + esc(NEEDS_ACTION[c.status] || '') + '</p><div class="msgbox">' + esc(remind.combined) + '</div><div class="btnrow"><button class="whatsapp" onclick="window.open(waLink(customerById(\'' + c.id + '\'), buildReminder(customerById(\'' + c.id + '\')).combined), \'_blank\')">Remind on WhatsApp</button><button class="sms" onclick="openSms(customerById(\'' + c.id + '\'), buildReminder(customerById(\'' + c.id + '\')).combined)">Remind by SMS</button><button class="secondary" onclick="copyText(buildReminder(customerById(\'' + c.id + '\')).combined, this)">Copy</button></div>' + smsHint() + '</div>' : '') +
+      (remind ? '<div class="card"><h3 style="margin-top:0">Needs action ⏰</h3><p>' + esc(NEEDS_ACTION[c.status] || '') + '</p><div class="msgbox">' + esc(remind.combined) + '</div><div class="btnrow"><button class="whatsapp" onclick="remindCustomer(\'' + c.id + '\', this)">Remind on WhatsApp</button><button class="sms" onclick="remindSms(\'' + c.id + '\', this)">Remind by SMS</button><button class="secondary" onclick="copyReminder(\'' + c.id + '\', this)">Copy</button></div>' + smsHint() + '</div>' : '') +
       '<div class="card"><h3 style="margin-top:0">Rewards</h3>' +
       '<p>Referrals: <b>' + rc + '</b> · Tier reached: <b>' + (t ? 'Level ' + t + ' — ' + esc(meta.settings.tiers[String(t)]) : 'None yet') + '</b> ' +
       (rewardDue(c) ? '<span class="pill due">Reward due — ' + esc(meta.settings.tiers[String(t)]) + '</span>' : '<span class="pill ok">Nothing due</span>') + '</p>' +
@@ -1155,37 +1514,71 @@ if (typeof document !== 'undefined') {
       '<div class="btnrow"><button class="secondary" onclick="copyText(\'' + esc(link).replace(/'/g, "\\'") + '\', this)">Copy reward link</button></div>' +
       '</div>' +
       '<div class="card"><h3 style="margin-top:0">Message this customer</h3>' +
-      '<div class="row"><select id="msgTpl" onchange="msgKey=this.value;msgAI=null;renderCustomer(\'' + c.id + '\')">' +
-      ['puja', 'referral', 'anniversary'].map(function (k) { return '<option value="' + k + '"' + (msgKey === k ? ' selected' : '') + '>' + TEMPLATE_NAMES[k] + '</option>'; }).join('') +
+      '<div class="row"><select id="msgTpl" onchange="msgKey=this.value;msgAI=null;msgAIStatus=null;renderCustomer(\'' + c.id + '\')">' +
+      ['festival', 'referral', 'anniversary'].map(function (k) { return '<option value="' + k + '"' + (msgKey === k ? ' selected' : '') + '>' + TEMPLATE_NAMES[k] + '</option>'; }).join('') +
       '</select></div>' +
-      '<div class="btnrow" style="margin-top:8px"><button class="' + (msgStyle === 'regular' ? '' : 'secondary') + '" onclick="msgStyle=\'regular\';msgAI=null;renderCustomer(\'' + c.id + '\')">😊 Regular</button>' +
-      '<button class="' + (msgStyle === 'funny' ? '' : 'secondary') + '" onclick="msgStyle=\'funny\';msgAI=null;renderCustomer(\'' + c.id + '\')">😂 Funny</button></div>' +
+      (msgKey === 'festival' ? '<div class="row" style="margin-top:8px"><select id="msgOcc" onchange="setMsgOccasion(this.value);msgAI=null;msgAIStatus=null;renderCustomer(\'' + c.id + '\')">' + occOptions + '</select></div>' : '') +
+      '<div class="btnrow" style="margin-top:8px"><button class="' + (msgStyle === 'regular' ? '' : 'secondary') + '" onclick="msgStyle=\'regular\';msgAI=null;msgAIStatus=null;renderCustomer(\'' + c.id + '\')">😊 Regular</button>' +
+      '<button class="' + (msgStyle === 'funny' ? '' : 'secondary') + '" onclick="msgStyle=\'funny\';msgAI=null;msgAIStatus=null;renderCustomer(\'' + c.id + '\')">😂 Funny</button></div>' +
       '<p class="sub">English + Assamese in one message. Name, months since install, referral count and reward link are filled in automatically.</p>' +
       '<div class="msgbox">' + esc(msgText) + '</div>' +
-      (msgAI ? '<p class="sub">✨ AI-personalized version — <a href="#" onclick="msgAI=null;renderCustomer(\'' + c.id + '\');return false;">use the template instead</a></p>' : '') +
+      (msgAI ? '<p class="sub">✨ AI-personalized version — <a href="#" onclick="msgAI=null;msgAIStatus=null;renderCustomer(\'' + c.id + '\');return false;">use the template instead</a></p>' : '') +
       '<div class="btnrow">' +
-      '<button class="whatsapp" onclick="window.open(waLink(customerById(\'' + c.id + '\'), currentMsgText(customerById(\'' + c.id + '\'))), \'_blank\')">WhatsApp</button>' +
-      '<button class="sms" onclick="openSms(customerById(\'' + c.id + '\'), currentMsgText(customerById(\'' + c.id + '\')))">SMS</button>' +
-      '<button class="secondary" onclick="copyText(currentMsgText(customerById(\'' + c.id + '\')), this)">Copy message</button>' +
+      '<button class="whatsapp" onclick="msgCustomerWa(\'' + c.id + '\')">WhatsApp</button>' +
+      '<button class="sms" onclick="msgCustomerSms(\'' + c.id + '\')">SMS</button>' +
+      '<button class="secondary" onclick="msgCustomerCopy(\'' + c.id + '\', this)">Copy message</button>' +
       '<button class="secondary" onclick="personalizeMessage(\'' + c.id + '\', this)">✨ Personalize with AI</button>' +
       '</div>' +
+      (msgAIStatus ? '<p class="sub ai-status">⚠️ ' + esc(msgAIStatus) + '</p>' : '') +
       ((meta.settings && meta.settings.geminiApiKey) ? '' : '<p class="sub">✨ Personalize with AI needs a key — add your free Gemini API key in Settings (get one at Google AI Studio, aistudio.google.com).</p>') +
       smsHint() + '</div>' +
       '<div class="card"><h3 style="margin-top:0">Edit details</h3>' +
       '<label>Address</label><input id="f-address" value="' + esc(c.address) + '">' +
       '<label>Install date</label><input id="f-install" type="date" value="' + esc(c.installDate) + '">' +
       '<label>Stage</label><select id="f-status">' + STAGES.map(function (st) { return '<option' + (c.status === st ? ' selected' : '') + '>' + st + '</option>'; }).join('') + '</select>' +
-      '<label>Referred by</label><select id="f-ref"><option value="">Nobody</option>' + customers.filter(function (x) { return x.id !== c.id; }).map(function (x) { return '<option value="' + x.id + '"' + (c.referredBy === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select>' +
+      '<label>Referred by (refer code)</label><input id="f-refcode" value="' + esc((c.referredBy && customerById(c.referredBy) ? customerById(c.referredBy).referCode : '') || '') + '" placeholder="e.g. SH7K2Q" oninput="refCodeChanged()">' +
+      '<p class="sub" id="f-refname">' + (c.referredBy && customerById(c.referredBy) ? 'Referred by: ' + esc(customerById(c.referredBy).name) + ' (' + esc(customerById(c.referredBy).consumerNo) + ')' : 'No referrer') + '</p>' +
+      '<label>Or pick the referrer by name</label><select id="f-ref" onchange="refSelectChanged()"><option value="">Nobody</option>' + customers.filter(function (x) { return x.id !== c.id; }).map(function (x) { return '<option value="' + x.id + '"' + (c.referredBy === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select>' +
+      '<p class="sub" id="f-ref-status"></p>' +
       '<div class="btnrow"><button onclick="saveCustomer(\'' + c.id + '\')">Save changes</button></div></div>';
   }
+  /* Keep the refer-code input and the referrer select in sync on the
+     edit form: typing a code picks the matching customer, and picking a
+     name fills in that customer's code. */
+  window.refCodeChanged = function () {
+    var codeEl = document.getElementById('f-refcode');
+    var nameEl = document.getElementById('f-refname');
+    var sel = document.getElementById('f-ref');
+    if (!codeEl) return;
+    var code = codeEl.value.trim();
+    if (!code) { if (sel) sel.value = ''; if (nameEl) nameEl.textContent = 'No referrer'; return; }
+    var r = customerByReferCode(code);
+    if (r) { if (sel) sel.value = r.id; if (nameEl) nameEl.textContent = 'Referred by: ' + r.name + ' (' + r.consumerNo + ')'; }
+    else { if (sel) sel.value = ''; if (nameEl) nameEl.textContent = '⚠️ No customer has that code'; }
+  };
+  window.refSelectChanged = function () {
+    var sel = document.getElementById('f-ref');
+    var codeEl = document.getElementById('f-refcode');
+    var nameEl = document.getElementById('f-refname');
+    var r = sel && sel.value ? customerById(sel.value) : null;
+    if (codeEl) codeEl.value = r ? (r.referCode || '') : '';
+    if (nameEl) nameEl.textContent = r ? 'Referred by: ' + r.name + ' (' + r.consumerNo + ')' : 'No referrer';
+  };
   window.saveCustomer = function (id) {
     var c = customerById(id);
     if (!c) return;
+    var refCode = document.getElementById('f-refcode').value.trim();
+    if (refCode && !customerByReferCode(refCode)) {
+      var st = document.getElementById('f-ref-status');
+      if (st) st.textContent = '⚠️ No customer has that refer code — fix it or clear it before saving.';
+      return;
+    }
+    var oldReferredBy = c.referredBy;
     c.address = document.getElementById('f-address').value.trim();
     c.installDate = document.getElementById('f-install').value;
     c.status = document.getElementById('f-status').value;
     c.referredBy = document.getElementById('f-ref').value || null;
-    activeDB.saveCustomer(c).then(function () { return refreshCustomers(); }).then(function () { renderCustomer(id); });
+    activeDB.saveCustomer(c).then(function () { return syncReferrerLists(c, oldReferredBy); }).then(function () { return refreshCustomers(); }).then(function () { renderCustomer(id); });
   };
   window.giveTierReward = function (id) {
     var c = customerById(id);
@@ -1219,13 +1612,28 @@ if (typeof document !== 'undefined') {
       '<label>Applied on</label><input id="n-submitted" type="date">' +
       '<label>Install date (optional)</label><input id="n-install" type="date">' +
       '<label>Stage</label><select id="n-status">' + STAGES.map(function (st) { return '<option>' + st + '</option>'; }).join('') + '</select>' +
+      '<label>Referred by (refer code — optional)</label><input id="n-refcode" placeholder="e.g. SH7K2Q" oninput="showRefName()">' +
+      '<p class="sub" id="n-refname"></p>' +
       '<div class="btnrow"><button onclick="addCustomer()">Save customer</button></div></div>';
   }
+  /* Live lookup for the "Referred by" code on the add-customer form. */
+  window.showRefName = function () {
+    var el = document.getElementById('n-refname');
+    var codeEl = document.getElementById('n-refcode');
+    if (!el || !codeEl) return;
+    var code = codeEl.value.trim();
+    if (!code) { el.textContent = ''; return; }
+    var r = customerByReferCode(code);
+    el.textContent = r ? 'Referred by: ' + r.name + ' (' + r.consumerNo + ')' : '⚠️ No customer has that refer code — check it.';
+  };
   window.addCustomer = function () {
     var consumerNo = document.getElementById('n-consumer').value.trim();
     var name = document.getElementById('n-name').value.trim();
     var mobile = document.getElementById('n-mobile').value.replace(/\D/g, '').slice(-10);
     if (!consumerNo || !name || !mobile) { alert('Consumer number, name and mobile are needed.'); return; }
+    var refCode = document.getElementById('n-refcode').value.trim();
+    var referrer = refCode ? customerByReferCode(refCode) : null;
+    if (refCode && !referrer) { var el = document.getElementById('n-refname'); if (el) el.textContent = '⚠️ No customer has that refer code — fix it or clear it before saving.'; return; }
     var c = {
       id: '', code: '', consumerNo: consumerNo, name: name, mobile: mobile,
       address: document.getElementById('n-address').value.trim(),
@@ -1235,9 +1643,9 @@ if (typeof document !== 'undefined') {
       submittedOn: document.getElementById('n-submitted').value,
       installDate: document.getElementById('n-install').value,
       applicationNo: '', subDivision: '', duplicate: false, reverification: false,
-      referredBy: null, referralCount: 0, rewards: []
+      referredBy: referrer ? referrer.id : null, referralCount: 0, rewards: []
     };
-    activeDB.saveCustomer(c).then(function () { return refreshCustomers(); }).then(function () { location.hash = '#customers'; renderCustomers(); });
+    activeDB.saveCustomer(c).then(function () { return syncReferrerLists(c, null); }).then(function () { return refreshCustomers(); }).then(function () { location.hash = '#customers'; renderCustomers(); });
   };
 
   function renderQuote() {
@@ -1306,6 +1714,11 @@ if (typeof document !== 'undefined') {
         '<td>' + (rewardDue(c) ? '<span class="pill due">Reward due</span>' : '<span class="pill ok">Nothing due</span>') + '</td>' +
         '<td>' + (c.rewards || []).map(function (r) { return esc(r.label); }).join(', ') + '</td></tr>';
     }).join('');
+    var referrers = customers.filter(function (c) { return referralCount(c.id) > 0; }).sort(function (a, b) { return referralCount(b.id) - referralCount(a.id); });
+    var refRows = referrers.map(function (r) {
+      var refs = referredList(r.id);
+      return '<div class="pick-row" style="cursor:pointer" onclick="location.hash=\'#customer-' + r.id + '\'"><div><b>' + esc(r.name) + '</b> · ' + esc(r.consumerNo) + ' · Code <b>' + esc(r.referCode || '—') + '</b><br><span style="color:var(--muted);font-size:12.5px">' + refs.length + ' referral' + (refs.length > 1 ? 's' : '') + ' · ' + (tierReached(r) ? 'Level ' + tierReached(r) + ' — ' + esc(s.tiers[String(tierReached(r))]) : 'No tier yet') + '<br>Brought: ' + (refs.length ? refs.map(function (x) { return esc(firstName(x.name)) + ' (' + esc(x.consumerNo) + ')'; }).join(', ') : '—') + '</span></div><span style="font-size:22px;color:var(--muted)">›</span></div>';
+    }).join('');
     view.innerHTML =
       '<h2>🎁 Rewards</h2><p class="sub">Tiered rewards: 1 referral, 2 referrals, 3 or more. Change the rewards in Settings — the app counts everything for you.</p>' +
       (mode === 'sample' ? sampleBanner() : '') +
@@ -1313,7 +1726,10 @@ if (typeof document !== 'undefined') {
       '<p>1 referral → <b>' + esc(s.tiers['1']) + '</b><br>2 referrals → <b>' + esc(s.tiers['2']) + '</b><br>3+ referrals → <b>' + esc(s.tiers['3']) + '</b></p>' +
       '<p class="sub">' + dueList.length + ' customer(s) have a reward due right now.</p></div>' +
       '<div class="card" style="padding:4px 14px;overflow-x:auto"><table class="list"><thead><tr><th>Customer</th><th>Referrals</th><th>Tier reached</th><th>Status</th><th>Rewards given</th></tr></thead><tbody>' +
-      (rows || '<tr><td colspan="5">No customers yet.</td></tr>') + '</tbody></table></div>';
+      (rows || '<tr><td colspan="5">No customers yet.</td></tr>') + '</tbody></table></div>' +
+      '<div class="card"><h3 style="margin-top:0">Refer tracker — who brought whom</h3>' +
+      '<p class="sub">Every customer who referred someone, and who they brought (first name + consumer no. only).</p>' +
+      (refRows || '<p class="sub">No referrals yet.</p>') + '</div>';
   }
 
   function renderSettings() {
@@ -1340,18 +1756,25 @@ if (typeof document !== 'undefined') {
       '<label>Offer text</label><textarea id="s-offer-text">' + esc(s.offerText || '') + '</textarea>' +
       '<label>Valid till (optional)</label><input id="s-offer-till" type="date" value="' + esc(s.offerValidTill || '') + '">' +
       '</div>' +
+      '<div class="card"><h3 style="margin-top:0">🎉 Festival occasions</h3>' +
+      '<p class="sub">Occasions for the Festival offer message — the picker shows them by date, and the message fills in the occasion name and greeting. Add your own (e.g. Diwali) or delete one you don’t need.</p>' +
+      sortedOccasions().map(function (o) {
+        return '<p style="margin:4px 0">🎉 <b>' + esc(o.name) + '</b> · ' + esc(fmtDate(o.date)) + ' <a href="#" onclick="deleteOccasion(\'' + esc(o.id) + '\');return false;">Delete</a></p>';
+      }).join('') +
+      '<div class="row"><input id="s-occ-name" placeholder="Occasion name, e.g. Diwali"><input id="s-occ-date" type="date"></div>' +
+      '<div class="row"><input id="s-occ-en" placeholder="English greeting, e.g. Happy Diwali! 🪔"><input id="s-occ-as" placeholder="Assamese greeting, e.g. দীপাৱলীৰ শুভেচ্ছা! 🪔"></div>' +
+      '<div class="btnrow"><button class="secondary" onclick="addOccasion()">+ Add occasion</button></div></div>' +
       '<div class="card"><h3 style="margin-top:0">Reward tiers</h3>' +
       '<label>1 referral gets</label><input id="s-t1" value="' + esc(s.tiers['1']) + '">' +
       '<label>2 referrals get</label><input id="s-t2" value="' + esc(s.tiers['2']) + '">' +
       '<label>3+ referrals get</label><input id="s-t3" value="' + esc(s.tiers['3']) + '">' +
       '<p class="sub">These are editable examples — set what you actually give.</p></div>' +
       '<div class="card"><h3 style="margin-top:0">✨ AI personalization (Gemini)</h3>' +
-      '<p class="sub">Powers the “Personalize with AI” button in Messages. The key is stored in Firebase only — never in the app code or this public site. Get a free key at Google AI Studio (aistudio.google.com).</p>' +
-      '<label>Gemini API key</label><input id="s-gemini-key" type="password" value="' + esc(s.geminiApiKey || '') + '" placeholder="Paste your Gemini API key">' +
-      '<label>Gemini model</label><input id="s-gemini-model" value="' + esc(s.geminiModel || 'gemini-2.0-flash') + '">' +
+      '<p class="sub">Powers the “Personalize with AI” button in Messages. The key is stored in Firebase only — never in the app code or this public site. Get a free key at Google AI Studio (aistudio.google.com). Model: Gemini 3.5 Flash-Lite (fixed).</p>' +
+      '<label>Gemini API key</label><input id="s-gemini-key" type="password" autocomplete="new-password" value="' + esc(s.geminiApiKey || '') + '" placeholder="Paste your Gemini API key">' +
       '</div>' +
       '<div class="card"><h3 style="margin-top:0">Message templates (English + Assamese in one message)</h3>' +
-      '<p class="sub">Placeholders: {name} first name · {months} months since install · {count} referrals · {kw} system size · {link} reward link · {poster} offer poster link. The app fills them in for each customer.</p>' +
+      '<p class="sub">Placeholders: {name} first name · {months} months since install · {count} referrals · {kw} system size · {link} reward link · {poster} offer poster link · {occasion} festival name · {greeting} festival greeting. The app fills them in for each customer.</p>' +
       Object.keys(TEMPLATE_NAMES).map(function (k) {
         return '<label>' + TEMPLATE_NAMES[k] + ' — English</label><textarea id="t-' + k + '-en">' + esc(t[k].en) + '</textarea>' +
           '<label>' + TEMPLATE_NAMES[k] + ' — Assamese</label><textarea id="t-' + k + '-as">' + esc(t[k].as) + '</textarea>';
@@ -1369,6 +1792,24 @@ if (typeof document !== 'undefined') {
     meta.templatesVersion = TEMPLATES_VERSION;
     activeDB.saveMeta(meta).then(function () { saveMeta(); renderSettings(); alert('Messages reset to the latest version.'); });
   };
+  window.addOccasion = function () {
+    var name = document.getElementById('s-occ-name').value.trim();
+    var date = document.getElementById('s-occ-date').value;
+    var en = document.getElementById('s-occ-en').value.trim();
+    var as = document.getElementById('s-occ-as').value.trim();
+    if (!name || !date) { alert('Occasion name and date are needed.'); return; }
+    var list = normalizeOccasions(meta.settings.occasions);
+    var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'occasion';
+    if (list.some(function (o) { return o.id === id; })) id = id + '-' + date;
+    list.push({ id: id, name: name, nameAs: name, date: date, en: en || ('Happy ' + name + '!'), as: as || (name + 'ৰ শুভেচ্ছা!') });
+    meta.settings.occasions = list;
+    activeDB.saveMeta(meta).then(function () { saveMeta(); renderSettings(); });
+  };
+  window.deleteOccasion = function (id) {
+    meta.settings.occasions = normalizeOccasions(meta.settings.occasions).filter(function (o) { return o.id !== id; });
+    if (msgOccasionId === id) msgOccasionId = null;
+    activeDB.saveMeta(meta).then(function () { saveMeta(); renderSettings(); });
+  };
   window.saveSettings = function () {
     meta.settings.businessName = document.getElementById('s-name').value.trim();
     meta.settings.businessShort = document.getElementById('s-short').value.trim();
@@ -1380,7 +1821,8 @@ if (typeof document !== 'undefined') {
     meta.settings.offerText = document.getElementById('s-offer-text').value.trim();
     meta.settings.offerValidTill = document.getElementById('s-offer-till').value;
     meta.settings.geminiApiKey = document.getElementById('s-gemini-key').value.trim();
-    meta.settings.geminiModel = document.getElementById('s-gemini-model').value.trim() || 'gemini-2.0-flash';
+    /* The model is locked — a save always writes the single model id. */
+    meta.settings.geminiModel = GEMINI_MODEL_ID;
     meta.settings.tiers['1'] = document.getElementById('s-t1').value.trim();
     meta.settings.tiers['2'] = document.getElementById('s-t2').value.trim();
     meta.settings.tiers['3'] = document.getElementById('s-t3').value.trim();
@@ -1389,6 +1831,15 @@ if (typeof document !== 'undefined') {
       meta.templates[k].as = document.getElementById('t-' + k + '-as').value;
     });
     activeDB.saveMeta(meta).then(function () { saveMeta(); alert('Settings saved.'); });
+  };
+
+  /* Share a customer's refer code on WhatsApp: first name, the referral
+     offer, the code and the short poster link. The friend's benefit is
+     worded generically ("a special discount") — the vendor sets the
+     actual rewards in Settings; no amount is invented here. */
+  window.shareReferral = function (code, first) {
+    var msg = 'Hi! I\'m ' + first + ' — I got rooftop solar from SH Enterprise (Green Energy), Kalpanagar, Goalpara, and they take great care of their customers. Use my refer code ' + code + ' when you contact them and you\'ll get a special discount as a friend of mine. See the offer: ' + POSTER_SHORT_URL;
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
   };
 
   function renderPublic(code) {
@@ -1410,6 +1861,13 @@ if (typeof document !== 'undefined') {
         '<div class="stat"><div class="num">' + (t ? 'Level ' + t : '—') + '</div><div class="lbl">Reward tier</div></div></div>' +
         '<div class="tier-progress" style="margin-top:14px"><div style="width:' + Math.min(100, rc / 3 * 100) + '%"></div></div>' +
         '<p class="sub">' + rc + ' of 3 referrals towards the top reward. ' + esc(nextLabel) + '</p>' +
+        '<h3>Your refer code</h3>' +
+        '<p style="font-size:34px;letter-spacing:4px;margin:4px 0"><b>' + esc(c.referCode || '') + '</b></p>' +
+        '<div class="btnrow"><button class="secondary" onclick="copyText(\'' + esc(c.referCode || '') + '\', this)">Copy code</button>' +
+        '<button class="whatsapp" onclick="shareReferral(\'' + esc(c.referCode || '') + '\', \'' + esc(firstName(c.name)).replace(/\'/g, "\\'") + '\')">Share on WhatsApp</button></div>' +
+        '<p class="sub">Give this code to a friend — when they install solar with us and mention your code, your friend gets a special discount, and you earn a reward. We take care of every new customer: installation, paperwork, subsidy process and after-care.</p>' +
+        '<h3>Friends you brought</h3>' +
+        ((c.referred || []).length ? '<p>' + (c.referred || []).map(function (x) { return '✓ ' + esc(x.name) + ' (' + esc(x.consumerNo) + ')'; }).join('<br>') + '</p>' : '<p class="sub">Nobody yet — share your code above to start.</p>') +
         '<h3>Rewards you have earned</h3>' +
         ((c.rewards || []).length ? '<p>' + c.rewards.map(function (r) { return '✓ ' + esc(r.label) + ' (' + esc(r.date) + ')'; }).join('<br>') + '</p>' : '<p class="sub">No rewards yet — bring a friend who installs solar and your first reward is yours.</p>') +
         '<p class="sub">Reward tiers: 1 referral → ' + esc(s.tiers['1']) + ' · 2 → ' + esc(s.tiers['2']) + ' · 3+ → ' + esc(s.tiers['3']) + '</p>' +
@@ -1418,8 +1876,8 @@ if (typeof document !== 'undefined') {
     }
     if (firebaseReady && mode === 'firestore') {
       FirestoreDB.getCustomerByCode(code).then(function (c) {
-        if (c) { customers = [c]; show(c, false); }
-        else show(customerByCode(code) || demoCustomers().find(function (x) { return x.code === code; }) || null, true);
+        if (!c) { show(customerByCode(code) || demoCustomers().find(function (x) { return x.code === code; }) || null, true); return; }
+        return ensureCustomerReferCode(c).then(function (c2) { customers = [c2]; show(c2, false); });
       }).catch(function () { show(null, false); });
     } else {
       var c = demoCustomers().find(function (x) { return x.code === code; });
@@ -1467,4 +1925,37 @@ if (typeof document !== 'undefined') {
       route();
     }
   });
+}
+
+/* Node tests: expose the pure helpers (the browser ignores this). */
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    GEMINI_MODEL_ID: GEMINI_MODEL_ID,
+    SampleDB: SampleDB,
+    DEFAULT_OCCASIONS: DEFAULT_OCCASIONS,
+    OLD_POSTER_URL: OLD_POSTER_URL,
+    POSTER_SHORT_URL: POSTER_SHORT_URL,
+    TEMPLATES_VERSION: TEMPLATES_VERSION,
+    fillTemplate: fillTemplate,
+    normalizeOccasions: normalizeOccasions,
+    sortedOccasions: sortedOccasions,
+    nextOccasion: nextOccasion,
+    currentOccasion: currentOccasion,
+    setMsgOccasion: setMsgOccasion,
+    recordSent: recordSent,
+    sentLabel: sentLabel,
+    toFirestore: toFirestore,
+    LS_KEY: LS_KEY,
+    makeReferCode: makeReferCode,
+    customerByReferCode: customerByReferCode,
+    referCodeTaken: referCodeTaken,
+    referredEntry: referredEntry,
+    syncReferrerLists: syncReferrerLists,
+    ensureReferCodes: ensureReferCodes,
+    ensureReferrerLists: ensureReferrerLists,
+    DEFAULT_TEMPLATES: DEFAULT_TEMPLATES,
+    FUNNY_TEMPLATES: FUNNY_TEMPLATES,
+    DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+    OLD_OFFER_TEXT_V3: OLD_OFFER_TEXT_V3
+  };
 }
