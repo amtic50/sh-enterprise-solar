@@ -34,6 +34,19 @@ var NEEDS_ACTION = {
 };
 var DONE_STAGE = 'Subsidy Disbursal (Disbursed)';
 
+/* Emoji for each pipeline stage — shown on status pills and headings. */
+var STAGE_EMOJI = {
+  'Subsidy Disbursal (Disbursed)': '✅',
+  'Installation (Pending)': '🔧',
+  'Upload Agreement (Pending)': '📝',
+  'Inspection (Pending)': '🔍',
+  'Subsidy Request (Not Redeemed)': '⏰',
+  'Subsidy Request (Redeemed)': '📤',
+  'Subsidy Request (Return)': '↩️',
+  'Subsidy Disbursal (Pending)': '💰'
+};
+function stageEmoji(st) { return STAGE_EMOJI[st] || '•'; }
+
 var SUBSIDY_SLABS = [
   { maxKw: 1, amount: 30000 },
   { maxKw: 2, amount: 60000 },
@@ -53,45 +66,48 @@ var DEFAULT_SETTINGS = {
   address: 'Kalpanagar, near Kalpana Cinema Hall, Goalpara, Assam',
   phone: '',
   gstPct: 13.8,
+  offerTitle: '🎉 BUMPER OFFER ☀️',
+  offerText: 'PM Surya Ghar subsidy up to ₹78,000 on rooftop solar — plus gifts for every friend you refer! 🎁',
+  offerValidTill: '',
   tiers: { '1': 'Free panel cleaning', '2': '₹500 gift', '3': '₹1,500 gift' }
 };
 
 var DEFAULT_TEMPLATES = {
   puja: {
-    en: "Namaskar {name}, you installed solar from us {months} ago, and we haven't forgotten you. Hope you and your family are doing well. This Puja, if anyone you know wants solar at home, send them to us — every friend you bring earns you a gift from us. — Saiful, SH Enterprise (Green Energy), Kalpanagar",
-    as: "নমস্কাৰ {name}, আপুনি {months} আগতে আমাৰ পৰা ছোলাৰ লগাইছিল, আমি আপোনাক পাহৰা নাই। আপুনি আৰু আপোনাৰ পৰিয়াল ভালে আছে বুলি আশা কৰোঁ। এই পূজাত আপোনাৰ চিনাকি কোনোবাই ঘৰত ছোলাৰ লগাব বিচাৰিলে আমাৰ ওচৰলৈ পঠিয়াওক — আপুনি অনা প্ৰতিজন বন্ধুৰ বাবে আপোনাৰ বাবে উপহাৰ আছে। — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ"
+    en: "🙏 Namaskar {name}! ☀️ It's been {months} since you went solar with us — thank you for trusting us! This Puja, share the sunshine: PM Surya Ghar subsidy up to ₹78,000 on rooftop solar, plus a gift for you for every friend you bring! 🎁 Know someone who wants solar? Send them to us — your gift is waiting! ✨ — Saiful, SH Enterprise (Green Energy), Kalpanagar 🌞",
+    as: "🙏 নমস্কাৰ {name}! ☀️ আপুনি আমাৰ পৰা ছোলাৰ লগোৱা {months} হ'ল — আপোনাৰ বিশ্বাসৰ বাবে ধন্যবাদ! এই পূজাত ৰ'দৰ পোহৰ বিলাওক: PM Surya Ghar চাবচিডিৰে ₹78,000 লৈকে ৰেহাই, আৰু আপুনি অনা প্ৰতিজন বন্ধুৰ বাবে উপহাৰ! 🎁 চিনাকি কোনোবাই ছোলাৰ লগাব বিচাৰিছে নেকি? আমাৰ ওচৰলৈ পঠিয়াওক — আপোনাৰ উপহাৰ ৰৈ আছে! ✨ — ছাইফুল, SH Enterprise (Green Energy), কল্পনানগৰ 🌞"
   },
   referral: {
-    en: "Namaskar {name}, thank you — because of you, your neighbour's home has solar now too. That's {count} referral from you. Bring one more friend and your next reward is yours. You can see your rewards here: {link} — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, ধন্যবাদ — আপোনাৰ বাবে আপোনাৰ চুবুৰীয়াৰ ঘৰতো ছোলাৰ লাগিল। আপোনাৰ {count} জন ৰেফাৰেল হ'ল। আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব। আপোনাৰ উপহাৰ ইয়াত চাওক: {link} — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! 🎉 Wonderful news — because of you, another home is shining with solar! You have brought {count} friend(s) to us so far. 🌞 Bring one more friend and your next gift is yours! 🎁 Check your rewards here: {link} — Saiful, SH Enterprise (Green Energy) ✨",
+    as: "🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ বাবে আন এখন ঘৰতো ছোলাৰ জিলিকিছে! আপুনি এতিয়ালৈকে {count} জন বন্ধুক আমাৰ ওচৰলৈ আনিছে। 🌞 আৰু এজন বন্ধুক আনিলে আপোনাৰ পৰৱৰ্তী উপহাৰটো পাব! 🎁 আপোনাৰ উপহাৰ ইয়াত চাওক: {link} — ছাইফুল, SH Enterprise (Green Energy) ✨"
   },
   anniversary: {
-    en: "Namaskar {name}, it's been 1 year since we installed solar at your home. Hope your electricity bill is showing the savings. If the panels need a cleaning or a check, just message us. — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, আপোনাৰ ঘৰত ছোলাৰ লগোৱা ১ বছৰ হ'ল। বিদ্যুৎ বিলত ৰাহি হোৱাটো নিশ্চয় দেখিছে। পেনেল চাফা বা পৰীক্ষাৰ প্ৰয়োজন হ'লে আমাক মেছেজ কৰক। — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! 🎉☀️ Happy 1-year solar anniversary! A full year since we installed solar at your home — your electricity bill must be smiling by now. 😊 Need a panel cleaning or a free check-up? Just message us anytime! And if a friend wants solar, PM Surya Ghar subsidy up to ₹78,000 is waiting — plus a gift for you! 🎁 — Saiful, SH Enterprise (Green Energy)",
+    as: "🙏 নমস্কাৰ {name}! 🎉☀️ ছোলাৰৰ ১ বছৰ সম্পূৰ্ণ হোৱাৰ শুভেচ্ছা! আপোনাৰ ঘৰত ছোলাৰ লগোৱা এবছৰ হ'ল — বিদ্যুৎ বিল নিশ্চয় কমিছে। 😊 পেনেল চাফা বা বিনামূলীয়া পৰীক্ষা লাগিলে আমাক মেছেজ কৰক! আৰু কোনো বন্ধুৱে ছোলাৰ লগাব বিচাৰিলে PM Surya Ghar চাবচিডি ₹78,000 লৈকে পাব — আপোনাৰ বাবেও উপহাৰ আছে! 🎁 — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_not_redeemed: {
-    en: "Namaskar {name}, your {kw} kW solar is installed and your subsidy is ready to redeem, but it is still pending from your side. Please open the PM Surya Ghar portal and redeem it, or message us and we will help you do it. — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, আপোনাৰ {kw} kW ছোলাৰ লগোৱা হৈ গৈছে আৰু আপোনাৰ চাবচিডি ৰিডিম কৰিবলৈ সাজু, কিন্তু এতিয়াও বাকী আছে। অনুগ্ৰহ কৰি PM Surya Ghar পৰ্টেলত ৰিডিম কৰক, নহ'লে আমাক মেছেজ কৰক, আমি সহায় কৰিম। — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! ⏰ Your {kw} kW solar is installed — but your subsidy is still waiting to be redeemed! 💰 Don't miss it: open the PM Surya Ghar portal and redeem your subsidy today, or just message us and we will help you do it. ✅ — Saiful, SH Enterprise (Green Energy)",
+    as: "🙏 নমস্কাৰ {name}! ⏰ আপোনাৰ {kw} kW ছোলাৰ লগোৱা হৈ গৈছে — কিন্তু আপোনাৰ চাবচিডিটো এতিয়াও ৰিডিম কৰা হোৱা নাই! 💰 হেৰুৱাব নালাগে: আজিয়েই PM Surya Ghar পৰ্টেলত ৰিডিম কৰক, নহ'লে আমাক মেছেজ কৰক — আমি সহায় কৰিম। ✅ — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_return: {
-    en: "Namaskar {name}, your subsidy application was returned for a small correction. Please send us the corrected document or photo and we will resubmit it right away. — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, আপোনাৰ চাবচিডি আবেদনখন সৰু ভুলৰ বাবে ঘূৰাই দিয়া হৈছে। শুদ্ধ কাগজ বা ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ আকৌ জমা দিম। — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! 📄 Your subsidy application came back for one small correction — no need to worry! Just send us the corrected document or photo and we will resubmit it right away. ✅ Message us now and let's get your subsidy moving! 💰 — Saiful, SH Enterprise (Green Energy)",
+    as: "🙏 নমস্কাৰ {name}! 📄 আপোনাৰ চাবচিডি আবেদনখন সৰু ভুল এটাৰ বাবে ঘূৰাই দিয়া হৈছে — চিন্তা কৰিব নালাগে! শুদ্ধ কাগজ বা ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ আকৌ জমা দিম। ✅ এতিয়াই মেছেজ কৰক, চাবচিডিটো সোনকালে পোৱাৰ ব্যৱস্থা কৰোঁ! 💰 — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_installation: {
-    en: "Namaskar {name}, your {kw} kW solar installation is still pending. We are ready to install — please tell us a day that suits you and we will come. — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, আপোনাৰ {kw} kW ছোলাৰ এতিয়াও লগোৱা হোৱা নাই। আমি লগাবলৈ সাজু — আপোনাৰ সুবিধাৰ দিন এটা জনাওক, আমি আহিম। — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! ☀️ Your {kw} kW solar is ready to shine at your home — we are just waiting for your date! 📅 Tell us a day that suits you and our team will come and install it. Plus, PM Surya Ghar subsidy up to ₹78,000 is waiting for you after installation! 💰 — Saiful, SH Enterprise (Green Energy)",
+    as: "🙏 নমস্কাৰ {name}! ☀️ আপোনাৰ {kw} kW ছোলাৰ আপোনাৰ ঘৰত জিলিকিবলৈ সাজু — আমি কেৱল আপোনাৰ দিনটোৰ অপেক্ষাত! 📅 সুবিধাৰ দিন এটা জনাওক, আমাৰ দলে আহি লগাই দিব। লগোৱাৰ পিছত PM Surya Ghar চাবচিডি ₹78,000 লৈকে আপোনাৰ বাবে ৰৈ আছে! 💰 — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_agreement: {
-    en: "Namaskar {name}, your solar agreement is still to be uploaded on the portal. Please send us a photo of the signed agreement and we will upload it for you. — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, আপোনাৰ ছোলাৰ এগ্ৰিমেণ্টখন এতিয়াও পৰ্টেলত আপলোড হোৱা নাই। চহী কৰা এগ্ৰিমেণ্টৰ ফটো আমাক পঠিয়াওক, আমি আপলোড কৰি দিম। — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! 📝 Your solar agreement is the last step before installation — just one signature away! ✍️ Please send us a photo of the signed agreement and we will upload it on the portal for you right away. ✅ — Saiful, SH Enterprise (Green Energy)",
+    as: "🙏 নমস্কাৰ {name}! 📝 আপোনাৰ ছোলাৰ এগ্ৰিমেণ্টখনেই লগোৱাৰ আগৰ শেষ খোজ — মাত্ৰ এটা চহীৰ দূৰত্বত! ✍️ চহী কৰা এগ্ৰিমেণ্টৰ ফটো আমাক পঠিয়াওক, আমি তৎক্ষণাৎ পৰ্টেলত আপলোড কৰি দিম। ✅ — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_inspection: {
-    en: "Namaskar {name}, the inspection of your {kw} kW solar plant is pending. Please keep the plant area clear and your documents ready — the inspector may visit any day. — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, আপোনাৰ {kw} kW ছোলাৰ প্লাণ্টৰ পৰিদৰ্শন এতিয়াও বাকী আছে। প্লাণ্টৰ ঠাই মুকলি ৰাখক আৰু কাগজবোৰ সাজু ৰাখক — পৰিদৰ্শক যিকোনো দিন আহিব পাৰে। — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! 🔍 The inspection of your {kw} kW solar plant is coming up — almost there! ✅ Please keep the plant area clear and your documents ready. The inspector may visit any day. Questions? Just message us! 📱 — Saiful, SH Enterprise (Green Energy)",
+    as: "🙏 নমস্কাৰ {name}! 🔍 আপোনাৰ {kw} kW ছোলাৰ প্লাণ্টৰ পৰিদৰ্শন আহি আছে — আৰু অলপ বাকী! ✅ প্লাণ্টৰ ঠাই মুকলি ৰাখক আৰু কাগজবোৰ সাজু ৰাখক। পৰিদৰ্শক যিকোনো দিন আহিব পাৰে। কিবা প্ৰশ্ন থাকিলে আমাক মেছেজ কৰক! 📱 — ছাইফুল, SH Enterprise (Green Energy)"
   },
   reminder_disbursal: {
-    en: "Namaskar {name}, your subsidy is approved and the payment is pending with the department. We are following up on it — we will message you the moment it reaches your bank account. — Saiful, SH Enterprise",
-    as: "নমস্কাৰ {name}, আপোনাৰ চাবচিডি অনুমোদন হৈছে আৰু টকা বিভাগৰ পৰা আহিবলৈ বাকী আছে। আমি তাৰ পিছত লাগি আছোঁ — টকা আপোনাৰ বেংক একাউণ্টত সোমোৱা মাত্ৰকে আপোনাক জনাম। — ছাইফুল, SH Enterprise"
+    en: "🙏 Namaskar {name}! 🎉 Good news — your subsidy is approved! 💰 The money is on its way from the department to your bank account. We are following up every day, and the moment it arrives we will message you. ✅ — Saiful, SH Enterprise (Green Energy)",
+    as: "🙏 নমস্কাৰ {name}! 🎉 ভাল খবৰ — আপোনাৰ চাবচিডি অনুমোদন হৈছে! 💰 টকা বিভাগৰ পৰা আপোনাৰ বেংক একাউণ্টলৈ আহি আছে। আমি প্ৰতিদিনে তাৰ পিছত লাগি আছোঁ — টকা সোমোৱা মাত্ৰকে আপোনাক জনাম। ✅ — ছাইফুল, SH Enterprise (Green Energy)"
   }
 };
 var REMINDER_BY_STAGE = {
@@ -247,10 +263,25 @@ function waLink(c, msg) {
   if (mob.length === 10) mob = '91' + mob;
   return 'https://wa.me/' + mob + '?text=' + encodeURIComponent(msg);
 }
+/* SMS link — platform-aware: Android uses ?body=, iOS uses &body=.
+   The number is always in +91 international format, the message is encoded.
+   A website cannot send an SMS by itself — this link opens the phone's SMS
+   app with the number and message already filled in; the vendor taps send. */
 function smsLink(c, msg) {
   var mob = String(c.mobile || '').replace(/\D/g, '');
   if (mob.length === 10) mob = '91' + mob;
-  return 'sms:+' + mob + '?body=' + encodeURIComponent(msg);
+  var ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+  var sep = /iPhone|iPad|iPod/i.test(ua) ? '&' : '?';
+  return 'sms:+' + mob + sep + 'body=' + encodeURIComponent(msg);
+}
+/* Fire an SMS link with a real anchor click — more reliable on mobile
+   browsers than assigning location.href. */
+function openSms(c, msg) {
+  var a = document.createElement('a');
+  a.href = smsLink(c, msg);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 function computeQuote(q) {
   var panel = +q.panel || 0, inverter = +q.inverter || 0, structure = +q.structure || 0,
@@ -609,11 +640,16 @@ function refreshMeta() {
 if (typeof document !== 'undefined') {
   var view = null, tabs = null;
   var NAV = [
-    ['#dashboard', 'Dashboard'], ['#customers', 'Customers'], ['#quote', 'Make a quote'],
-    ['#rewards', 'Rewards'], ['#settings', 'Settings']
+    ['#messages', '💬 Messages'], ['#reminders', '⏰ Reminders'], ['#dashboard', '📊 Dashboard'],
+    ['#customers', '👥 Customers'], ['#quote', '🧾 Make a quote'],
+    ['#rewards', '🎁 Rewards'], ['#settings', '⚙️ Settings']
   ];
   var listState = { q: '', status: '', subDiv: '', kw: '', sort: 'submitted-desc' };
   var msgKey = 'puja';
+  /* Messages tab state: which template, which customer, search, disbursed-only filter. */
+  var msgCustomerId = null;
+  var msgSearch = '';
+  var msgOnlyDisbursed = false;
   var quoteState = { name: '', kw: 3, panel: 150000, inverter: 45000, structure: 25000, installation: 15000, other: 5000, gstPct: null, calc: null };
 
   function publicCode() {
@@ -625,6 +661,22 @@ if (typeof document !== 'undefined') {
   function noBackendNote() {
     return firebaseReady ? '' : '<div class="notice"><b>Backend not connected yet.</b> The Firebase project is being set up — this page is running on sample data until the login is wired in.</div>';
   }
+  /* Bumper-offer banner — bright, editable in Settings. Shown on the
+     Dashboard and the Messages tab. Clear the title + text in Settings
+     to hide it. The default text states only the real PM Surya Ghar
+     subsidy slabs — the vendor replaces it with his real offer. */
+  function offerBannerHTML() {
+    var o = meta.settings;
+    if (!o.offerTitle && !o.offerText) return '';
+    var valid = o.offerValidTill ? ' · Valid till ' + esc(fmtDate(o.offerValidTill)) : '';
+    return '<div class="offer-banner"><div class="offer-title">' + esc(o.offerTitle) + '</div>' +
+      '<div class="offer-text">' + esc(o.offerText) + valid + '</div></div>';
+  }
+  /* Honest hint under every SMS button: a website cannot send an SMS
+     by itself — the phone's SMS app does the sending. */
+  function smsHint() {
+    return '<p class="sub sms-hint">📱 Opens your phone\u2019s SMS app with the number and message already filled in — just tap send.</p>';
+  }
   function renderTabs(active) {
     tabs.innerHTML = NAV.map(function (n) {
       return '<a href="' + n[0] + '" class="' + (active === n[0] ? 'active' : '') + '">' + n[1] + '</a>';
@@ -635,11 +687,13 @@ if (typeof document !== 'undefined') {
     var code = publicCode();
     if (code) { tabs.style.display = 'none'; renderPublic(code); return; }
     if (!authed) { tabs.style.display = 'none'; renderLoggedOut(); return; }
-    var h = location.hash || '#dashboard';
+    var h = location.hash || '#messages';
     if (h === '#logout') { doLogout(); return; }
     if (h.indexOf('#customer-') === 0) { renderTabs('#customers'); renderCustomer(h.slice('#customer-'.length)); return; }
     renderTabs(h.split('?')[0]);
-    if (h === '#customers') renderCustomers();
+    if (h === '#messages') renderMessages();
+    else if (h === '#reminders') renderReminders();
+    else if (h === '#customers') renderCustomers();
     else if (h === '#quote') renderQuote();
     else if (h === '#rewards') renderRewards();
     else if (h === '#settings') renderSettings();
@@ -683,7 +737,7 @@ if (typeof document !== 'undefined') {
     return '<div class="cust-card" onclick="location.hash=\'#customer-' + c.id + '\'">' +
       '<div class="cust-name">' + esc(c.name) + '</div>' +
       '<div class="cust-sub">' + esc(c.consumerNo) + ' · ' + esc(c.area) + '</div>' +
-      '<div class="cust-row"><span class="pill">' + esc(c.status) + '</span><span class="pill info">' + esc(c.systemKw) + ' kW</span></div>' +
+      '<div class="cust-row"><span class="pill">' + esc(stageEmoji(c.status)) + ' ' + esc(c.status) + '</span><span class="pill info">⚡ ' + esc(c.systemKw) + ' kW</span></div>' +
       '<div class="cust-row"><span>Applied ' + esc(fmtDate(c.submittedOn)) + '</span>' +
       (c.installDate ? '<span>Installed ' + esc(fmtDate(c.installDate)) + '</span>' : '<span style="color:var(--muted)">Not installed yet</span>') + '</div>' +
       (rc ? '<div class="cust-row"><span class="pill ok">' + rc + ' referral' + (rc > 1 ? 's' : '') + '</span>' + (rewardDue(c) ? '<span class="pill due">Reward due</span>' : '') + '</div>' : '') +
@@ -708,29 +762,26 @@ if (typeof document !== 'undefined') {
     var stageRows = STAGES.map(function (st) {
       return '<div class="bar-row"><span class="mon" style="width:230px">' + esc(st) + '</span><span class="cnt">' + s.stageCounts[st] + '</span></div>';
     }).join('') + (s.otherStages ? '<div class="bar-row"><span class="mon" style="width:230px">Other</span><span class="cnt">' + s.otherStages + '</span></div>' : '');
-    var needs = Object.keys(NEEDS_ACTION).map(function (st) {
-      var list = s.needsAction[st];
-      if (!list.length) return '';
-      var rows = list.slice(0, 6).map(function (c) {
-        return '<div class="need-row"><div><b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW<br><span style="color:var(--muted);font-size:12.5px">' + esc(NEEDS_ACTION[st]) + ' Applied ' + esc(fmtDate(c.submittedOn)) + '.</span></div>' +
-          '<button class="secondary" onclick="event.stopPropagation();remindCustomer(\'' + c.id + '\', this)">Remind</button></div>';
-      }).join('');
-      return '<div class="card"><h3 style="margin-top:0">' + esc(st) + ' — ' + list.length + '</h3><p class="sub">' + esc(NEEDS_ACTION[st]) + '</p>' + rows +
-        (list.length > 6 ? '<p class="sub">+ ' + (list.length - 6) + ' more — see Customers, filtered by this stage.</p>' : '') + '</div>';
-    }).join('');
+    var stuckTotal = Object.keys(NEEDS_ACTION).reduce(function (a, st) { return a + s.needsAction[st].length; }, 0);
+    var stuckLine = stuckTotal === 0 ? 'Nothing stuck — every application is moving. 🎉'
+      : stuckTotal === 1 ? '1 customer needs a reminder'
+      : stuckTotal + ' customers need a reminder';
+    var set = meta.settings;
     view.innerHTML =
-      '<h2>Dashboard</h2><p class="sub">Everything at a glance. Counts come from your customer list — nothing is typed in by hand.</p>' +
+      '<div class="hero"><div class="hero-name">☀️ ' + esc(set.businessName) + ' <span>· ' + esc(set.businessShort) + '</span></div>' +
+      '<div class="hero-tag">🌞 Rooftop solar, made simple — PM Surya Ghar</div>' +
+      '<div class="hero-sub">' + esc(set.address) + '</div></div>' +
+      offerBannerHTML() +
       (mode === 'sample' ? sampleBanner() : '') +
       '<div class="stats">' +
-      '<div class="stat"><div class="num">' + s.total + '</div><div class="lbl">Total customers</div></div>' +
-      '<div class="stat"><div class="num">' + s.appsThisMonth + '</div><div class="lbl">Applications this month</div></div>' +
-      '<div class="stat"><div class="num">' + s.totalKw + '</div><div class="lbl">Total kW proposed</div></div>' +
-      '<div class="stat"><div class="num">' + s.referralsTotal + '</div><div class="lbl">Referred customers</div></div>' +
-      '<div class="stat warn"><div class="num">' + s.rewardsDue + '</div><div class="lbl">Rewards due</div></div>' +
-      '<div class="stat"><div class="num">' + s.doneCount + '</div><div class="lbl">Subsidy disbursed (done)</div></div>' +
+      '<div class="stat"><div class="num">' + s.total + '</div><div class="lbl">👥 Total customers</div></div>' +
+      '<div class="stat"><div class="num">' + s.appsThisMonth + '</div><div class="lbl">📅 Applications this month</div></div>' +
+      '<div class="stat"><div class="num">' + s.totalKw + '</div><div class="lbl">⚡ Total kW proposed</div></div>' +
+      '<div class="stat"><div class="num">' + s.referralsTotal + '</div><div class="lbl">🤝 Referred customers</div></div>' +
+      '<div class="stat warn"><div class="num">' + s.rewardsDue + '</div><div class="lbl">🎁 Rewards due</div></div>' +
+      '<div class="stat"><div class="num">' + s.doneCount + '</div><div class="lbl">✅ Subsidy disbursed (done)</div></div>' +
       '</div>' +
-      '<h3>Needs action</h3>' +
-      (needs || '<div class="card"><p>Nothing stuck — every application is moving.</p></div>') +
+      '<div class="card reminder-summary"><p style="margin:0">⏰ <b>' + esc(stuckLine) + '</b> — subsidy stuck, installation or inspection pending. <a href="#reminders">Open Reminders →</a></p></div>' +
       '<div class="card"><p><b>' + s.doneCount + ' customers have their subsidy disbursed</b> — these are the ones to message for referrals and festival offers. <a href="#customers" onclick="listState.status=\'' + DONE_STAGE + '\'">See them →</a></p></div>' +
       '<div class="card"><h3 style="margin-top:0">Pipeline — portal stages</h3>' + stageRows + '</div>' +
       '<div class="card"><h3 style="margin-top:0">Applications per month</h3>' + (bars || '<p class="sub">No application dates yet.</p>') + '</div>';
@@ -740,11 +791,95 @@ if (typeof document !== 'undefined') {
     if (!c) return;
     var msg = buildReminder(c);
     if (!msg) return;
-    var choice = 'WhatsApp';
+    var old = btn ? btn.textContent : '';
     if (btn) { btn.textContent = 'Opening WhatsApp…'; }
     window.open(waLink(c, msg.combined), '_blank');
-    setTimeout(function () { if (btn) btn.textContent = 'Remind'; }, 2000);
+    setTimeout(function () { if (btn) btn.textContent = old; }, 2000);
   };
+  window.remindSms = function (id, btn) {
+    var c = customerById(id);
+    if (!c) return;
+    var msg = buildReminder(c);
+    if (!msg) return;
+    var old = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = 'Opening SMS…'; }
+    openSms(c, msg.combined);
+    setTimeout(function () { if (btn) btn.textContent = old; }, 2000);
+  };
+
+  /* ---- Messages tab: pick template → pick customer → tap send ---- */
+  function previewCustomer() {
+    return { id: '__preview', code: '__preview', name: 'Ramesh', mobile: '', systemKw: 3,
+      installDate: '2026-01-01', submittedOn: '2026-01-01', referredBy: null, referralCount: 0, rewards: [] };
+  }
+  window.sendMsg = function (kind, btn) {
+    var c = msgCustomerId ? customerById(msgCustomerId) : null;
+    if (!c) { alert('Pick a customer first — tap a name below.'); return; }
+    var msg = buildMessage(msgKey, c).combined;
+    if (kind === 'wa') window.open(waLink(c, msg), '_blank');
+    else if (kind === 'sms') openSms(c, msg);
+    else copyText(msg, btn);
+  };
+  function renderMessages() {
+    var c = msgCustomerId ? customerById(msgCustomerId) : null;
+    var q = msgSearch.toLowerCase();
+    var pool = customers.filter(function (x) { return !msgOnlyDisbursed || x.status === DONE_STAGE; });
+    var matches = pool.filter(function (x) {
+      return !q || (x.name + ' ' + x.consumerNo + ' ' + x.mobile).toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 8);
+    var tplOptions = Object.keys(TEMPLATE_NAMES).map(function (k) {
+      return '<option value="' + k + '"' + (msgKey === k ? ' selected' : '') + '>' + TEMPLATE_NAMES[k] + '</option>';
+    }).join('');
+    var pickRows = matches.map(function (x) {
+      return '<div class="pick-row" onclick="msgCustomerId=\'' + x.id + '\';renderMessages()"><div><b>' + esc(x.name) + '</b> · ' + esc(x.consumerNo) + '<br><span style="color:var(--muted);font-size:12.5px">' + esc(stageEmoji(x.status)) + ' ' + esc(x.status) + ' · ' + esc(x.systemKw) + ' kW</span></div><span style="font-size:22px;color:var(--muted)">›</span></div>';
+    }).join('');
+    var msg = buildMessage(msgKey, c || previewCustomer());
+    view.innerHTML =
+      '<h2>💬 Messages</h2><p class="sub">Pick a template, pick a customer, tap send. English + Assamese in one message — name, months, referrals and reward link fill in by themselves.</p>' +
+      offerBannerHTML() +
+      (mode === 'sample' ? sampleBanner() : '') +
+      '<div class="card"><h3 style="margin-top:0">1 · Choose a message 💬</h3>' +
+      '<select id="msgTpl2" onchange="msgKey=this.value;renderMessages()">' + tplOptions + '</select></div>' +
+      '<div class="card"><h3 style="margin-top:0">2 · Choose a customer 👥</h3>' +
+      (c ? '<p style="margin:0 0 10px">✅ <b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW · ' + esc(c.status) + ' <a href="#" onclick="msgCustomerId=null;renderMessages();return false;">Change</a></p>'
+        : '<div class="btnrow" style="margin:0 0 10px"><button class="' + (msgOnlyDisbursed ? 'secondary' : '') + '" onclick="msgOnlyDisbursed=false;renderMessages()">All customers</button>' +
+          '<button class="' + (msgOnlyDisbursed ? '' : 'secondary') + '" onclick="msgOnlyDisbursed=true;renderMessages()">✅ Disbursed only</button></div>' +
+          '<input id="mq" placeholder="Search name, consumer no., mobile…" value="' + esc(msgSearch) + '" oninput="msgSearch=this.value;renderMessages()">' +
+          '<div style="margin-top:6px">' + (pickRows || '<p class="sub">No customers match.</p>') + '</div>' +
+          '<p class="sub" style="margin-top:8px">💡 Tip: switch to “Disbursed only” to message your happy customers one by one for referrals.</p>') +
+      '</div>' +
+      '<div class="card"><h3 style="margin-top:0">3 · Preview &amp; send ' + (c ? 'to ' + esc(firstName(c.name)) : '(sample preview — pick a customer to fill in their details)') + '</h3>' +
+      '<div class="msgbox">' + esc(msg.combined) + '</div>' +
+      '<div class="btnrow big">' +
+      '<button class="whatsapp" onclick="sendMsg(\'wa\', this)">💬 WhatsApp</button>' +
+      '<button class="sms" onclick="sendMsg(\'sms\', this)">✉️ SMS</button>' +
+      '<button class="secondary" onclick="sendMsg(\'copy\', this)">📋 Copy message</button>' +
+      '</div>' + smsHint() + '</div>';
+    var mq = document.getElementById('mq');
+    if (mq) { mq.focus(); mq.setSelectionRange(mq.value.length, mq.value.length); }
+  }
+
+  /* ---- Reminders tab: the stuck stages, with a Remind button each ---- */
+  function renderReminders() {
+    var s = dashboardStats(customers);
+    var total = Object.keys(NEEDS_ACTION).reduce(function (a, st) { return a + s.needsAction[st].length; }, 0);
+    var blocks = Object.keys(NEEDS_ACTION).map(function (st) {
+      var list = s.needsAction[st];
+      if (!list.length) return '';
+      var rows = list.map(function (c) {
+        return '<div class="need-row"><div><b>' + esc(c.name) + '</b> · ' + esc(c.consumerNo) + ' · ' + esc(c.systemKw) + ' kW<br><span style="color:var(--muted);font-size:12.5px">' + esc(NEEDS_ACTION[st]) + ' Applied ' + esc(fmtDate(c.submittedOn)) + '.</span></div>' +
+          '<div class="btnrow remind-btns"><button class="whatsapp" onclick="remindCustomer(\'' + c.id + '\', this)">WhatsApp</button>' +
+          '<button class="sms" onclick="remindSms(\'' + c.id + '\', this)">SMS</button>' +
+          '<button class="secondary" onclick="copyText(buildReminder(customerById(\'' + c.id + '\')).combined, this)">Copy</button></div></div>';
+      }).join('');
+      return '<div class="card"><h3 style="margin-top:0">' + esc(stageEmoji(st)) + ' ' + esc(st) + ' — ' + list.length + '</h3><p class="sub">' + esc(NEEDS_ACTION[st]) + '</p>' + rows + '</div>';
+    }).join('');
+    view.innerHTML =
+      '<h2>⏰ Reminders</h2><p class="sub">' + (total ? total + ' customer' + (total === 1 ? '' : 's') + ' stuck — tap WhatsApp, SMS or Copy to nudge them.' : 'Nothing stuck — every application is moving. 🎉') + '</p>' +
+      (mode === 'sample' ? sampleBanner() : '') +
+      smsHint() +
+      (blocks || '<div class="card"><p>Nothing stuck — every application is moving. 🎉</p></div>');
+  }
 
   function renderCustomers() {
     var subs = [], kws = [];
@@ -756,7 +891,7 @@ if (typeof document !== 'undefined') {
     var filtered = filterCustomers(customers, listState);
     var sorted = sortCustomers(filtered, listState.sort);
     view.innerHTML =
-      '<h2>Customers (' + sorted.length + ')</h2>' +
+      '<h2>👥 Customers (' + sorted.length + ')</h2>' +
       '<p class="sub">Card by card — one tap opens the customer, with WhatsApp and SMS ready.</p>' +
       (mode === 'sample' ? sampleBanner() : '') +
       '<div class="card"><div class="row">' +
@@ -837,7 +972,7 @@ if (typeof document !== 'undefined') {
       '<dt>Referred by</dt><dd>' + (c.referredBy && customerById(c.referredBy) ? esc(customerById(c.referredBy).name) : '—') + '</dd>' +
       '<dt>Referred</dt><dd>' + (refs.length ? refs.map(function (r) { return esc(r.name); }).join(', ') : 'Nobody yet') + '</dd>' +
       '</dl></div>' +
-      (remind ? '<div class="card"><h3 style="margin-top:0">Needs action</h3><p>' + esc(NEEDS_ACTION[c.status] || '') + '</p><div class="msgbox">' + esc(remind.combined) + '</div><div class="btnrow"><button class="whatsapp" onclick="window.open(waLink(customerById(\'' + c.id + '\'), buildReminder(customerById(\'' + c.id + '\')).combined), \'_blank\')">Remind on WhatsApp</button><button class="sms" onclick="location.href=smsLink(customerById(\'' + c.id + '\'), buildReminder(customerById(\'' + c.id + '\')).combined)">Remind by SMS</button></div></div>' : '') +
+      (remind ? '<div class="card"><h3 style="margin-top:0">Needs action ⏰</h3><p>' + esc(NEEDS_ACTION[c.status] || '') + '</p><div class="msgbox">' + esc(remind.combined) + '</div><div class="btnrow"><button class="whatsapp" onclick="window.open(waLink(customerById(\'' + c.id + '\'), buildReminder(customerById(\'' + c.id + '\')).combined), \'_blank\')">Remind on WhatsApp</button><button class="sms" onclick="openSms(customerById(\'' + c.id + '\'), buildReminder(customerById(\'' + c.id + '\')).combined)">Remind by SMS</button><button class="secondary" onclick="copyText(buildReminder(customerById(\'' + c.id + '\')).combined, this)">Copy</button></div>' + smsHint() + '</div>' : '') +
       '<div class="card"><h3 style="margin-top:0">Rewards</h3>' +
       '<p>Referrals: <b>' + rc + '</b> · Tier reached: <b>' + (t ? 'Level ' + t + ' — ' + esc(meta.settings.tiers[String(t)]) : 'None yet') + '</b> ' +
       (rewardDue(c) ? '<span class="pill due">Reward due — ' + esc(meta.settings.tiers[String(t)]) + '</span>' : '<span class="pill ok">Nothing due</span>') + '</p>' +
@@ -857,9 +992,9 @@ if (typeof document !== 'undefined') {
       '<div class="msgbox">' + esc(msg.combined) + '</div>' +
       '<div class="btnrow">' +
       '<button class="whatsapp" onclick="window.open(waLink(customerById(\'' + c.id + '\'), buildMessage(msgKey, customerById(\'' + c.id + '\')).combined), \'_blank\')">WhatsApp</button>' +
-      '<button class="sms" onclick="location.href=smsLink(customerById(\'' + c.id + '\'), buildMessage(msgKey, customerById(\'' + c.id + '\')).combined)">SMS</button>' +
+      '<button class="sms" onclick="openSms(customerById(\'' + c.id + '\'), buildMessage(msgKey, customerById(\'' + c.id + '\')).combined)">SMS</button>' +
       '<button class="secondary" onclick="copyText(buildMessage(msgKey, customerById(\'' + c.id + '\')).combined, this)">Copy message</button>' +
-      '</div></div>' +
+      '</div>' + smsHint() + '</div>' +
       '<div class="card"><h3 style="margin-top:0">Edit details</h3>' +
       '<label>Address</label><input id="f-address" value="' + esc(c.address) + '">' +
       '<label>Install date</label><input id="f-install" type="date" value="' + esc(c.installDate) + '">' +
@@ -934,7 +1069,7 @@ if (typeof document !== 'undefined') {
     var gstPct = quoteState.gstPct == null ? s.gstPct : quoteState.gstPct;
     var qhtml = quoteState.calc ? quoteHTML(quoteState.calc, quoteState.name) : '';
     view.innerHTML =
-      '<h2>Make a quote</h2><p class="sub">Fill the numbers — the quotation builds itself. Subsidy follows the PM Surya Ghar slabs: 1 kW ₹30,000 · 2 kW ₹60,000 · 3 kW+ ₹78,000.</p>' +
+      '<h2>🧾 Make a quote</h2><p class="sub">Fill the numbers — the quotation builds itself. Subsidy follows the PM Surya Ghar slabs: 1 kW ₹30,000 · 2 kW ₹60,000 · 3 kW+ ₹78,000.</p>' +
       (mode === 'sample' ? sampleBanner() : '') +
       '<div class="card">' +
       '<label>Customer name</label><input id="q-name" value="' + esc(quoteState.name) + '" placeholder="e.g. Ramesh Das">' +
@@ -996,7 +1131,7 @@ if (typeof document !== 'undefined') {
         '<td>' + (c.rewards || []).map(function (r) { return esc(r.label); }).join(', ') + '</td></tr>';
     }).join('');
     view.innerHTML =
-      '<h2>Rewards</h2><p class="sub">Tiered rewards: 1 referral, 2 referrals, 3 or more. Change the rewards in Settings — the app counts everything for you.</p>' +
+      '<h2>🎁 Rewards</h2><p class="sub">Tiered rewards: 1 referral, 2 referrals, 3 or more. Change the rewards in Settings — the app counts everything for you.</p>' +
       (mode === 'sample' ? sampleBanner() : '') +
       '<div class="card"><h3 style="margin-top:0">Reward tiers (from Settings)</h3>' +
       '<p>1 referral → <b>' + esc(s.tiers['1']) + '</b><br>2 referrals → <b>' + esc(s.tiers['2']) + '</b><br>3+ referrals → <b>' + esc(s.tiers['3']) + '</b></p>' +
@@ -1008,7 +1143,7 @@ if (typeof document !== 'undefined') {
   function renderSettings() {
     var s = meta.settings, t = meta.templates;
     view.innerHTML =
-      '<h2>Settings — master data</h2><p class="sub">' + (mode === 'firestore' ? 'Saved in Firebase — shared with the vendor login.' : 'Saved on this device (sample preview). After login, settings live in Firebase.') + '</p>' +
+      '<h2>⚙️ Settings — master data</h2><p class="sub">' + (mode === 'firestore' ? 'Saved in Firebase — shared with the vendor login.' : 'Saved on this device (sample preview). After login, settings live in Firebase.') + '</p>' +
       '<div class="card"><h3 style="margin-top:0">Business</h3>' +
       '<label>Business name</label><input id="s-name" value="' + esc(s.businessName) + '">' +
       '<label>Short name</label><input id="s-short" value="' + esc(s.businessShort) + '">' +
@@ -1016,6 +1151,12 @@ if (typeof document !== 'undefined') {
       '<label>Address</label><input id="s-address" value="' + esc(s.address) + '">' +
       '<label>Phone</label><input id="s-phone" value="' + esc(s.phone) + '">' +
       '<label>Default GST %</label><input id="s-gst" type="number" step="0.1" value="' + esc(s.gstPct) + '">' +
+      '</div>' +
+      '<div class="card"><h3 style="margin-top:0">🎉 Bumper offer banner</h3>' +
+      '<p class="sub">Shown bright on the Dashboard and Messages tab. Change it to your real offer — or clear the title and text to hide the banner.</p>' +
+      '<label>Offer title</label><input id="s-offer-title" value="' + esc(s.offerTitle || '') + '">' +
+      '<label>Offer text</label><textarea id="s-offer-text">' + esc(s.offerText || '') + '</textarea>' +
+      '<label>Valid till (optional)</label><input id="s-offer-till" type="date" value="' + esc(s.offerValidTill || '') + '">' +
       '</div>' +
       '<div class="card"><h3 style="margin-top:0">Reward tiers</h3>' +
       '<label>1 referral gets</label><input id="s-t1" value="' + esc(s.tiers['1']) + '">' +
@@ -1038,6 +1179,9 @@ if (typeof document !== 'undefined') {
     meta.settings.address = document.getElementById('s-address').value.trim();
     meta.settings.phone = document.getElementById('s-phone').value.trim();
     meta.settings.gstPct = parseFloat(document.getElementById('s-gst').value) || 13.8;
+    meta.settings.offerTitle = document.getElementById('s-offer-title').value.trim();
+    meta.settings.offerText = document.getElementById('s-offer-text').value.trim();
+    meta.settings.offerValidTill = document.getElementById('s-offer-till').value;
     meta.settings.tiers['1'] = document.getElementById('s-t1').value.trim();
     meta.settings.tiers['2'] = document.getElementById('s-t2').value.trim();
     meta.settings.tiers['3'] = document.getElementById('s-t3').value.trim();
