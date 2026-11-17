@@ -653,7 +653,7 @@ if (typeof document !== 'undefined') {
     });
   }
   function doLogout() {
-    if (auth) { auth.signOut(); } else { authed = false; activeDB = SampleDB; route(); }
+    if (auth) { auth.signOut(); } else { authed = false; mode = 'sample'; activeDB = SampleDB; route(); }
   }
   window.demoLoginSubmit = function (ev) {
     if (ev) ev.preventDefault();
@@ -1096,6 +1096,7 @@ if (typeof document !== 'undefined') {
         firebaseReady = true;
         auth.onAuthStateChanged(function (user) {
           authed = !!user;
+          mode = authed ? 'firestore' : 'sample';
           activeDB = authed ? FirestoreDB : SampleDB;
           refreshMeta().then(refreshCustomers).then(function () { route(); });
         });
