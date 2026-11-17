@@ -749,6 +749,19 @@ function refreshMeta() {
 /* ===================== UI (browser only) ===================== */
 if (typeof document !== 'undefined') {
   var view = null, tabs = null;
+  /* PWA install: capture the browser's install prompt so Settings can
+     show an "Install app" button. iOS has no such event — Settings
+     shows the Share → Add to Home Screen hint instead. */
+  var deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
+  window.installApp = function () {
+    if (!deferredInstallPrompt) { alert('Install is not available yet — open this site in Chrome on Android, then try again from Settings. On iPhone, use Share → Add to Home Screen.'); return; }
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function () { deferredInstallPrompt = null; });
+  };
   var NAV = [
     ['#messages', '💬 Messages'], ['#reminders', '⏰ Reminders'], ['#dashboard', '📊 Dashboard'],
     ['#customers', '👥 Customers'], ['#quote', '🧾 Make a quote'],
@@ -1315,6 +1328,12 @@ if (typeof document !== 'undefined') {
       '<label>Phone</label><input id="s-phone" value="' + esc(s.phone) + '">' +
       '<label>Default GST %</label><input id="s-gst" type="number" step="0.1" value="' + esc(s.gstPct) + '">' +
       '</div>' +
+      '<div class="card"><h3 style="margin-top:0">📲 Install app</h3>' +
+      ((typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent || ''))
+        ? '<p>On iPhone: tap Share → Add to Home Screen to install SH Solar on your home screen.</p>'
+        : '<p class="sub">Install SH Solar on your phone for one-tap access, even offline.</p><div class="btnrow"><button onclick="installApp()">📲 Install app</button></div>' +
+          (deferredInstallPrompt ? '' : '<p class="sub">If the button does nothing yet, open this site in Chrome on Android and come back here — the install prompt appears once the browser offers it.</p>')) +
+      '</div>' +
       '<div class="card"><h3 style="margin-top:0">🎉 Bumper offer banner</h3>' +
       '<p class="sub">Shown bright on the Dashboard and Messages tab. Change it to your real offer — or clear the title and text to hide the banner.</p>' +
       '<label>Offer title</label><input id="s-offer-title" value="' + esc(s.offerTitle || '') + '">' +
@@ -1433,6 +1452,9 @@ if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function () {
     view = document.getElementById('view');
     tabs = document.getElementById('tabs');
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
     window.addEventListener('hashchange', route);
     var booted = initFirebase();
     if (!booted) {
