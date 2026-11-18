@@ -8,7 +8,7 @@
    Firebase / Firestore / Gemini API requests are NEVER cached — they
    always go to the network (the fetch handler only answers same-origin
    requests, and only from the cache when the file is already there). */
-var CACHE_NAME = 'sh-solar-v3';
+var CACHE_NAME = 'sh-solar-v4';
 var SHELL = [
   './',
   'index.html',

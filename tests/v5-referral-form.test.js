@@ -270,6 +270,11 @@ async function main() {
     assert.ok(wa.indexOf('SH7K2Q') >= 0, 'code in message');
     assert.ok(wa.indexOf('tinyurl.com/2875c3rt') >= 0, 'poster short link in message');
     assert.ok(wa.indexOf('refer.html?ref=SH7K2Q') >= 0, 'form link in WhatsApp message');
+    assert.ok(wa.indexOf('13 sub-divisions and many more') >= 0, 'reach line as approved');
+    assert.ok(wa.indexOf('Kalpana Cinema Hall') >= 0, 'office line as approved');
+    assert.ok(wa.indexOf('after-care') >= 0, 'care angle as approved');
+    assert.ok(wa.indexOf('Ramesh') >= 0, 'first name in message');
+    assert.ok(wa.indexOf('13 টা মহকুমাত আৰু বহুতো ঠাইত') >= 0, 'Assamese reach line as approved');
     var native = app.referralShareText('SH7K2Q', 'Ramesh', false);
     assert.ok(native.indexOf('refer.html') < 0, 'native text leaves the form link to the shared URL');
     [wa, native].forEach(function (m) {

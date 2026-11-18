@@ -514,12 +514,20 @@ function referralFormLink(code) {
    poster, and — for WhatsApp — the referral form link (the friend
    opens it, the code is prefilled, they submit their details). The
    native share sheet gets the form link as the shared URL instead, so
-   it is not duplicated in the text. No subsidy figure, no APDCL, no
+   it is not duplicated in the text. Bilingual (English + Assamese),
+   like the vendor message templates. No subsidy figure, no APDCL, no
    install total — advertising rules. */
 function referralShareText(code, first, includeFormLink) {
-  var msg = 'Hi! I\'m ' + first + ' — I got rooftop solar from SH Enterprise (Green Energy), Kalpanagar, Goalpara, and they take great care of their customers. Use my refer code ' + code + ' when you contact them and you\'ll get a special discount as a friend of mine. See the offer: ' + POSTER_SHORT_URL;
-  if (includeFormLink) msg += ' Send your details here: ' + referralFormLink(code);
-  return msg;
+  var en = 'Hi! I\'m ' + first + ' — I got rooftop solar for my home from SH Enterprise (Green Energy), Kalpanagar, Goalpara — and honestly, the care is what stood out. They didn\'t just install the panels and leave. They handled everything: installation, paperwork, the subsidy process, and after-care, so I never had to chase anyone. They have their own office in Kalpanagar, near Kalpana Cinema Hall, and they\'ve installed solar across 13 sub-divisions and many more places — so you\'re dealing with a team that\'s actually here. If you\'re thinking of going solar, use my refer code ' + code + ' when you contact them — you\'ll get a special discount as a friend of mine. See the offer: ' + POSTER_SHORT_URL + '.';
+  var as = 'নমস্কাৰ! মই ' + first + ' — মই মোৰ ঘৰৰ বাবে SH Enterprise (Green Energy), কল্পনানগৰ, গোৱালপাৰাৰ পৰা ছোলাৰ লৈছোঁ। আটাইতকৈ ভাল লগা কথাটো হ\'ল — তেওঁলোকে কেৱল পেনেল লগাই থৈ যোৱা নাই। ইনষ্টলেচন, কাগজ-পত্ৰ, চাবচিডি প্ৰক্ৰিয়া আৰু পিছৰ সেৱা — সকলোৰে যত্ন লৈছে। তেওঁলোকৰ নিজা কাৰ্যালয় কল্পনানগৰত, কল্পনা চিনেমা হলৰ ওচৰত, আৰু তেওঁলোকে 13 টা মহকুমাত আৰু বহুতো ঠাইত ছোলাৰ লগাইছে — আপুনি ইয়াতে থকা দল এটাৰ লগত কথা পাতিছে। আপুনি ছোলাৰ ল\'ব বিচাৰিলে মোৰ ৰেফাৰ ক\'ড ' + code + ' ব্যৱহাৰ কৰি যোগাযোগ কৰক — মোৰ বন্ধু হিচাপে বিশেষ ৰেহাই পাব। অফাৰটো চাওক: ' + POSTER_SHORT_URL + '।';
+  if (includeFormLink) {
+    en += ' Send your details here and they\'ll take it from there: ' + referralFormLink(code);
+    as += ' আপোনাৰ তথ্য ইয়াত পঠিয়াওক: ' + referralFormLink(code);
+  } else {
+    en += ' Send your details on the link I\'m sharing and they\'ll take it from there.';
+    as += ' মই শ্বেয়াৰ কৰা লিংকত আপোনাৰ তথ্য পঠিয়াওক।';
+  }
+  return en + '\n\n' + as;
 }
 /* How far a customer is along the referral journey, from what the
    public page can read (their own doc only): the furthest stage any
