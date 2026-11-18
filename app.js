@@ -285,6 +285,162 @@ var db = null, auth = null;
 
 function saveMeta() { store.save(LS_KEY, meta); }
 
+/* ---- Demo / trial mode (v7) ----
+   A limited demo for a friend: the app runs in trial mode when the main
+   page URL carries ?demo=1. The flag persists per-browser (localStorage)
+   so removing ?demo=1 from the URL does not escape the trial; ?demo=0
+   clears it. The trial allows 5 messages over 3 days from first use
+   (whichever comes first), then the whole site locks. Trial state lives
+   in Firestore (meta/trial) so clearing browser storage cannot reset
+   it. Normal (non-demo) use NEVER reads the trial doc and is never
+   locked or counted by it. Demo mode never changes the data source:
+   when logged in, the app loads the REAL Firestore customers, exactly
+   as the normal app does; the 8 sample customers appear only in the
+   logged-out preview, as today. */
+var TRIAL_LS_KEY = 'sh-solar-trial-v1';
+var TRIAL_DAYS = 3;
+var TRIAL_MESSAGE_LIMIT = 5;
+var demoMode = false;      /* true when this browser is in demo/trial mode */
+var trial = null;          /* loaded trial doc {startedAt, days, messageLimit, messagesSent}, or null */
+var trialLoadError = false; /* the trial doc could not be read (demo mode only) */
+
+function defaultTrial() {
+  return { startedAt: null, days: TRIAL_DAYS, messageLimit: TRIAL_MESSAGE_LIMIT, messagesSent: 0 };
+}
+/* The ?demo= value in a URL: '1' turns the trial on, '0' turns it off,
+   anything else is not a demo flag. */
+function demoFlagFromSearch(search) {
+  try {
+    var v = new URLSearchParams(search || '').get('demo');
+    if (v === '1') return 'on';
+    if (v === '0') return 'off';
+    return null;
+  } catch (e) { return null; }
+}
+/* Work out demo mode for this browser: the URL flag wins and is saved;
+   otherwise the saved per-browser flag decides. */
+function detectDemoMode(search) {
+  var flag = demoFlagFromSearch(search);
+  if (flag === 'on') { store.save(TRIAL_LS_KEY, '1'); return true; }
+  if (flag === 'off') { store.save(TRIAL_LS_KEY, '0'); return false; }
+  return store.load(TRIAL_LS_KEY) === '1';
+}
+function trialMessagesLeft(t) {
+  if (!t) return TRIAL_MESSAGE_LIMIT;
+  var limit = (typeof t.messageLimit === 'number' && t.messageLimit > 0) ? t.messageLimit : TRIAL_MESSAGE_LIMIT;
+  var sent = (typeof t.messagesSent === 'number' && t.messagesSent >= 0) ? t.messagesSent : 0;
+  return Math.max(0, limit - sent);
+}
+function trialDaysLeft(t, nowMs) {
+  if (!t || !t.startedAt) return TRIAL_DAYS;
+  var start = Date.parse(t.startedAt);
+  if (isNaN(start)) return TRIAL_DAYS;
+  var days = (typeof t.days === 'number' && t.days > 0) ? t.days : TRIAL_DAYS;
+  return Math.max(0, Math.ceil((start + days * 86400000 - nowMs) / 86400000));
+}
+function trialIsExpired(t, nowMs) {
+  if (!t || !t.startedAt) return false;
+  var start = Date.parse(t.startedAt);
+  if (isNaN(start)) return false;
+  var days = (typeof t.days === 'number' && t.days > 0) ? t.days : TRIAL_DAYS;
+  return nowMs >= start + days * 86400000;
+}
+function trialIsLocked(t, nowMs) {
+  if (!t) return false;
+  return trialMessagesLeft(t) <= 0 || trialIsExpired(t, nowMs);
+}
+/* Is this browser's demo trial currently locked? Only ever true in
+   demo mode; normal use is never locked. */
+function trialLocked() {
+  if (!demoMode) return false;
+  return trialIsLocked(trial, Date.now());
+}
+/* May a share/send go ahead? In demo mode a locked trial blocks it; a
+   trial that has not loaded yet fails open (never block on a read
+   failure). */
+function trialAllowShare() {
+  if (!demoMode) return true;
+  if (!trial) return true;
+  return !trialIsLocked(trial, Date.now());
+}
+/* Load the trial doc (demo mode only, vendor login only — the meta
+   rules are vendor-only). Sets startedAt on first demo load. Never
+   rejects; a failure leaves trial null (demo runs unlocked) and sets
+   trialLoadError. Normal mode never calls this. */
+function loadTrial() {
+  if (!demoMode || !firebaseReady || !authed || typeof db === 'undefined' || !db) return Promise.resolve(null);
+  trialLoadError = false;
+  return db.collection('meta').doc('trial').get().then(function (doc) {
+    if (!doc.exists) {
+      trial = defaultTrial();
+      trial.startedAt = new Date().toISOString();
+      return db.collection('meta').doc('trial').set(trial).then(function () { return trial; }).catch(function () { return trial; });
+    }
+    var d = doc.data() || {};
+    trial = {
+      startedAt: d.startedAt || null,
+      days: (typeof d.days === 'number' && d.days > 0) ? d.days : TRIAL_DAYS,
+      messageLimit: (typeof d.messageLimit === 'number' && d.messageLimit > 0) ? d.messageLimit : TRIAL_MESSAGE_LIMIT,
+      messagesSent: (typeof d.messagesSent === 'number' && d.messagesSent >= 0) ? d.messagesSent : 0
+    };
+    if (!trial.startedAt) {
+      trial.startedAt = new Date().toISOString();
+      return db.collection('meta').doc('trial').set(trial).then(function () { return trial; }).catch(function () { return trial; });
+    }
+    return trial;
+  }).catch(function () { trial = null; trialLoadError = true; return null; });
+}
+/* Count one share/send against the trial (demo mode only). The in-memory
+   count rises at once so the cap holds for this session even if the
+   Firestore write fails; the write is best-effort. */
+function trialRecordShare() {
+  if (!demoMode || !trial) return;
+  trial.messagesSent = (trial.messagesSent || 0) + 1;
+  if (firebaseReady && authed && typeof db !== 'undefined' && db) {
+    db.collection('meta').doc('trial').set({ messagesSent: trial.messagesSent }, { merge: true }).catch(function () {});
+  }
+}
+/* Reset the trial (vendor only): clears the start and the sent count so
+   the demo can be given again. The next demo-mode load starts a fresh
+   3 days. Writes the whole trial doc. */
+function resetTrial() {
+  trial = defaultTrial();
+  if (firebaseReady && authed && typeof db !== 'undefined' && db) {
+    return db.collection('meta').doc('trial').set(trial).then(function () { return trial; }).catch(function () { return trial; });
+  }
+  return Promise.resolve(trial);
+}
+/* One line of trial status for Settings (demo mode). Dates and trial
+   counts only — never customer data. */
+function trialStatusText() {
+  if (!trial) return trialLoadError ? 'Trial status could not be checked.' : 'Trial status loading…';
+  var started = String(trial.startedAt || '').slice(0, 10) || 'not started yet';
+  return 'Started ' + started + ' · ' + trialDaysLeft(trial, Date.now()) + ' day(s) left · ' + (trial.messagesSent || 0) + ' of ' + (trial.messageLimit || TRIAL_MESSAGE_LIMIT) + ' messages sent · ' + trialMessagesLeft(trial) + ' left.';
+}
+/* The trial banner shown in demo mode (not locked). Trial counts only —
+   never customer data. */
+function trialBannerHTML() {
+  if (!demoMode) return '';
+  if (!trial) {
+    if (trialLoadError) return '<div class="notice">⏳ <b>DEMO — trial</b> · Trial status could not be checked — the demo is running without limits for now.</div>';
+    return '<div class="notice">⏳ <b>DEMO — trial</b> · Trial status loading… this demo allows 5 messages over 3 days.</div>';
+  }
+  var days = trialDaysLeft(trial, Date.now());
+  return '<div class="notice">⏳ <b>DEMO — trial</b> · ' + trialMessagesLeft(trial) + ' of ' + (trial.messageLimit || TRIAL_MESSAGE_LIMIT) + ' messages left · ' + days + ' day' + (days === 1 ? '' : 's') + ' left. When the trial ends the app locks — contact Amit to continue.</div>';
+}
+/* The lock screen: shown instead of the whole app when the demo trial
+   has ended. No customer data of any kind on it. The "Check again"
+   button reloads the page (re-reads the trial doc), so the app opens
+   again once Amit has reset the trial. */
+function trialLockHTML() {
+  return '<div class="card" style="max-width:520px;margin:30px auto;text-align:center">' +
+    '<h2 style="margin-top:0">⏰ Demo trial ended</h2>' +
+    '<p>This demo of the SH Enterprise Solar app allowed 5 messages over 3 days. The trial has now ended.</p>' +
+    '<p>To keep using the app, please contact Amit to continue.</p>' +
+    '<p class="sub">SH Enterprise (Green Energy) · Kalpanagar, Goalpara</p>' +
+    '<div class="btnrow" style="justify-content:center"><button class="secondary" onclick="location.reload()">↻ Check again</button></div></div>';
+}
+
 /* ---- pure helpers ---- */
 function esc(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -681,6 +837,10 @@ function rewardDue(c) {
    delivered — the UI says so wherever it shows it. */
 function recordSent(c, channel, templateKey, style) {
   if (!c) return Promise.resolve();
+  /* A vendor message going out counts against the demo trial (demo mode
+     only — this is a no-op in normal use). The app can't see whether
+     WhatsApp/SMS actually delivered it, so the tap counts as sent. */
+  trialRecordShare();
   var now = new Date().toISOString();
   c.lastSentAt = now;
   c.lastSentChannel = channel;
@@ -1343,13 +1503,23 @@ if (typeof document !== 'undefined') {
     }).join('') + '<a href="#logout" style="margin-left:auto">Log out (' + esc((auth && auth.currentUser && auth.currentUser.email) || 'vendor') + ')</a>';
     tabs.style.display = 'flex';
   }
+  function renderTrialLock() {
+    view.innerHTML = trialLockHTML();
+  }
+  /* Prepend the trial banner to the current view (demo mode only). */
+  function prependTrialBanner() {
+    if (!demoMode || !view) return;
+    view.insertAdjacentHTML('afterbegin', trialBannerHTML());
+  }
   function route() {
+    /* Demo trial ended: the whole site locks — no view, no data. */
+    if (demoMode && trialLocked()) { tabs.style.display = 'none'; renderTrialLock(); return; }
     var code = publicCode();
     if (code) { tabs.style.display = 'none'; renderPublic(code); return; }
     if (!authed) { tabs.style.display = 'none'; renderLoggedOut(); return; }
     var h = location.hash || '#messages';
     if (h === '#logout') { doLogout(); return; }
-    if (h.indexOf('#customer-') === 0) { renderTabs('#customers'); renderCustomer(h.slice('#customer-'.length)); return; }
+    if (h.indexOf('#customer-') === 0) { renderTabs('#customers'); renderCustomer(h.slice('#customer-'.length)); prependTrialBanner(); return; }
     renderTabs(h.split('?')[0]);
     if (h === '#messages') renderMessages();
     else if (h === '#reminders') renderReminders();
@@ -1359,6 +1529,7 @@ if (typeof document !== 'undefined') {
     else if (h === '#rewards') renderRewards();
     else if (h === '#settings') renderSettings();
     else renderDashboard();
+    prependTrialBanner();
   }
   function doLogin(email, pass) {
     if (!firebaseReady) { alert('Backend not connected yet — the Firebase login is being set up.'); return; }
@@ -1379,7 +1550,7 @@ if (typeof document !== 'undefined') {
 
   function renderLoggedOut() {
     customers = demoCustomers();
-    view.innerHTML =
+    view.innerHTML = trialBannerHTML() +
       '<div class="login-wrap"><div class="card">' +
       '<h2 style="margin-top:0">Vendor login</h2>' +
       '<p class="sub">SH Enterprise (Green Energy) · Kalpanagar, Goalpara</p>' +
@@ -1451,6 +1622,7 @@ if (typeof document !== 'undefined') {
   window.remindCustomer = function (id, btn) {
     var c = customerById(id);
     if (!c) return;
+    if (!trialAllowShare()) { route(); return; }
     var msg = buildReminder(c);
     if (!msg) return;
     var old = btn ? btn.textContent : '';
@@ -1462,6 +1634,7 @@ if (typeof document !== 'undefined') {
   window.remindSms = function (id, btn) {
     var c = customerById(id);
     if (!c) return;
+    if (!trialAllowShare()) { route(); return; }
     var msg = buildReminder(c);
     if (!msg) return;
     var old = btn ? btn.textContent : '';
@@ -1473,6 +1646,7 @@ if (typeof document !== 'undefined') {
   window.copyReminder = function (id, btn) {
     var c = customerById(id);
     if (!c) return;
+    if (!trialAllowShare()) { route(); return; }
     var msg = buildReminder(c);
     if (!msg) return;
     copyText(msg.combined, btn);
@@ -1534,6 +1708,7 @@ if (typeof document !== 'undefined') {
   window.sendMsg = function (kind, btn) {
     var c = msgCustomerId ? customerById(msgCustomerId) : null;
     if (!c) { showAIStatus('Pick a customer first — tap a name below.'); return; }
+    if (!trialAllowShare()) { route(); return; }
     var msg = currentMsgText(c);
     var channel = kind === 'wa' ? 'WhatsApp' : kind === 'sms' ? 'SMS' : 'Copy';
     if (kind === 'wa') window.open(waLink(c, msg), '_blank');
@@ -1548,18 +1723,21 @@ if (typeof document !== 'undefined') {
   window.msgCustomerWa = function (id) {
     var c = customerById(id);
     if (!c) return;
+    if (!trialAllowShare()) { route(); return; }
     window.open(waLink(c, currentMsgText(c)), '_blank');
     recordSent(c, 'WhatsApp', msgKey, msgAI ? 'AI' : msgStyle).then(function () { route(); });
   };
   window.msgCustomerSms = function (id) {
     var c = customerById(id);
     if (!c) return;
+    if (!trialAllowShare()) { route(); return; }
     openSms(c, currentMsgText(c));
     recordSent(c, 'SMS', msgKey, msgAI ? 'AI' : msgStyle).then(function () { route(); });
   };
   window.msgCustomerCopy = function (id, btn) {
     var c = customerById(id);
     if (!c) return;
+    if (!trialAllowShare()) { route(); return; }
     copyText(currentMsgText(c), btn);
     recordSent(c, 'Copy', msgKey, msgAI ? 'AI' : msgStyle).then(function () { route(); });
   };
@@ -2072,6 +2250,14 @@ if (typeof document !== 'undefined') {
         : '<p class="sub">Install SH Solar on your phone for one-tap access, even offline.</p><div class="btnrow"><button onclick="installApp()">📲 Install app</button></div>' +
           (deferredInstallPrompt ? '' : '<p class="sub">If the button does nothing yet, open this site in Chrome on Android and come back here — the install prompt appears once the browser offers it.</p>')) +
       '</div>' +
+      (demoMode
+        ? '<div class="card"><h3 style="margin-top:0">⏳ Demo trial</h3>' +
+          '<p class="sub">This browser is running the limited demo (5 messages over 3 days). ' + esc(trialStatusText()) + '</p>' +
+          '<div class="btnrow"><button class="secondary" onclick="resetTrialFromSettings()">Reset trial</button>' +
+          '<button class="secondary" onclick="exitDemo()">Exit demo</button></div></div>'
+        : '<div class="card"><h3 style="margin-top:0">⏳ Demo trial</h3>' +
+          '<p class="sub">The limited demo (5 messages over 3 days) is given to a friend from a demo link. Resetting it here clears the start date and the sent count so the demo can be given again — use it after the demo ends or after the friend pays. This only writes the trial record; it does not read or change anything else.</p>' +
+          '<div class="btnrow"><button class="secondary" onclick="resetDemoTrial()">Reset demo trial</button></div></div>') +
       '<div class="card"><h3 style="margin-top:0">🎉 Bumper offer banner</h3>' +
       '<p class="sub">Shown bright on the Dashboard and Messages tab. Change it to your real offer — or clear the title and text to hide the banner.</p>' +
       '<label>Offer title</label><input id="s-offer-title" value="' + esc(s.offerTitle || '') + '">' +
@@ -2105,6 +2291,25 @@ if (typeof document !== 'undefined') {
       '<button class="secondary" onclick="resetTemplates()">Reset messages to the latest version</button>' +
       '<button class="secondary" onclick="if(confirm(\'Reset the sample preview to the 8 demo customers?\')){store.save(SAMPLE_LS_KEY, demoCustomers());route();}">Reset sample data</button></div>';
   }
+  /* Demo trial controls (vendor only). Reset clears the start date and
+     the sent count so the demo can be given again; the next demo-mode
+     load starts a fresh 3 days. The normal-mode button is write-only —
+     it never reads the trial doc, so normal use is never affected by
+     the trial. Exit demo clears this browser's demo flag and reloads
+     the normal site. */
+  window.resetTrialFromSettings = function () {
+    if (!confirm('Reset the demo trial? This clears the start date and the sent count, so the demo can be given again.')) return;
+    resetTrial().then(function () { location.reload(); });
+  };
+  window.resetDemoTrial = function () {
+    if (!confirm('Reset the demo trial? This clears the start date and the sent count, so the demo can be given again.')) return;
+    resetTrial().then(function () { alert('Demo trial reset.'); });
+  };
+  window.exitDemo = function () {
+    store.save(TRIAL_LS_KEY, '0');
+    demoMode = false;
+    location.href = location.pathname + (location.hash || '#messages');
+  };
   /* Restore the current built-in message templates (the latest version).
      Use after a template rewrite, or if the vendor's edits go wrong. */
   window.resetTemplates = function () {
@@ -2162,13 +2367,17 @@ if (typeof document !== 'undefined') {
   /* The share helpers (referralFormLink / referralShareText) live at
      module scope so Node tests can use them; these are the tap handlers. */
   window.shareReferral = function (code, first) {
+    if (!trialAllowShare()) { route(); return; }
     window.open('https://wa.me/?text=' + encodeURIComponent(referralShareText(code, first, true)), '_blank');
+    trialRecordShare();
   };
   /* Native share sheet where the browser has one (phone share sheet),
      WhatsApp as the fallback. */
   window.shareReferralNative = function (code, first) {
+    if (!trialAllowShare()) { route(); return; }
     if (typeof navigator !== 'undefined' && navigator.share) {
       navigator.share({ title: 'SH Enterprise Solar — refer a friend', text: referralShareText(code, first, false), url: referralFormLink(code) }).catch(function () {});
+      trialRecordShare();
     } else {
       window.shareReferral(code, first);
     }
@@ -2178,6 +2387,7 @@ if (typeof document !== 'undefined') {
      message. Where the API is not supported the button is not shown and
      the share sheet is the way in. */
   window.pickContactAndShare = function (code, first) {
+    if (!trialAllowShare()) { route(); return; }
     if (!(typeof navigator !== 'undefined' && navigator.contacts && typeof navigator.contacts.select === 'function')) { window.shareReferralNative(code, first); return; }
     navigator.contacts.select(['name', 'tel'], { multiple: false }).then(function (picked) {
       var contact = (picked || [])[0];
@@ -2189,6 +2399,7 @@ if (typeof document !== 'undefined') {
         return;
       }
       window.open('https://wa.me/91' + digits + '?text=' + encodeURIComponent(referralShareText(code, first, true)), '_blank');
+      trialRecordShare();
     }).catch(function () {});
   };
   /* Notification permission, asked early on the reward page only: the
@@ -2225,7 +2436,7 @@ if (typeof document !== 'undefined') {
       var nextLabel = t >= 3 ? 'You are at the top tier.' : (t === 2 ? '1 more referral for the top reward: ' + s.tiers['3'] : t === 1 ? '1 more referral for: ' + s.tiers['2'] : 'Your first referral earns: ' + s.tiers['1']);
       var contactsSupported = (typeof navigator !== 'undefined' && navigator.contacts && typeof navigator.contacts.select === 'function');
       var stageLabel = { signedUp: 'Signed up', solar: 'Got solar', rewarded: 'Reward earned' };
-      view.innerHTML =
+      view.innerHTML = trialBannerHTML() +
         '<div class="card" style="max-width:520px;margin:30px auto">' +
         (isSample ? '<p class="sub"><b>SAMPLE PREVIEW</b> — sample customer page.</p>' : '') +
         '<p class="sub">SH Enterprise (Green Energy) · Kalpanagar, Goalpara</p>' +
@@ -2280,7 +2491,13 @@ if (typeof document !== 'undefined') {
           authed = !!user;
           mode = authed ? 'firestore' : 'sample';
           activeDB = authed ? FirestoreDB : SampleDB;
-          refreshMeta().then(refreshCustomers).then(refreshReferrals).then(healReferralStages).then(function () { route(); });
+          /* Demo mode loads the trial (sets the 3-day clock on first
+             demo use) before anything else. If the trial has ended,
+             the lock screen shows and no customer data is loaded. */
+          refreshMeta().then(loadTrial).then(function () {
+            if (demoMode && trialLocked()) { route(); return; }
+            return refreshCustomers().then(refreshReferrals).then(healReferralStages).then(function () { route(); });
+          });
         });
         return true;
       }
@@ -2291,6 +2508,9 @@ if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function () {
     view = document.getElementById('view');
     tabs = document.getElementById('tabs');
+    /* Demo / trial mode: the ?demo= flag in the URL wins and is saved
+       per-browser; otherwise the saved flag decides. */
+    demoMode = detectDemoMode(typeof location !== 'undefined' ? location.search : '');
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function () {});
     }
@@ -2353,6 +2573,31 @@ if (typeof module !== 'undefined' && module.exports) {
     DEFAULT_TEMPLATES: DEFAULT_TEMPLATES,
     FUNNY_TEMPLATES: FUNNY_TEMPLATES,
     DEFAULT_SETTINGS: DEFAULT_SETTINGS,
-    OLD_OFFER_TEXT_V3: OLD_OFFER_TEXT_V3
+    OLD_OFFER_TEXT_V3: OLD_OFFER_TEXT_V3,
+    /* Demo / trial mode (v7) — pure helpers + test hooks. */
+    TRIAL_DAYS: TRIAL_DAYS,
+    TRIAL_MESSAGE_LIMIT: TRIAL_MESSAGE_LIMIT,
+    TRIAL_LS_KEY: TRIAL_LS_KEY,
+    demoFlagFromSearch: demoFlagFromSearch,
+    detectDemoMode: detectDemoMode,
+    defaultTrial: defaultTrial,
+    trialMessagesLeft: trialMessagesLeft,
+    trialDaysLeft: trialDaysLeft,
+    trialIsExpired: trialIsExpired,
+    trialIsLocked: trialIsLocked,
+    trialBannerHTML: trialBannerHTML,
+    trialLockHTML: trialLockHTML,
+    loadTrial: loadTrial,
+    resetTrial: resetTrial,
+    trialRecordShare: trialRecordShare,
+    trialAllowShare: trialAllowShare,
+    trialLocked: trialLocked,
+    _setDemoMode: function (v) { demoMode = !!v; },
+    _isDemoMode: function () { return demoMode; },
+    _setTrial: function (t) { trial = t; },
+    _getTrial: function () { return trial; },
+    _getMode: function () { return mode; },
+    _setAuthed: function (v) { authed = !!v; },
+    _setFirebaseReady: function (v) { firebaseReady = !!v; }
   };
 }
